@@ -1,20 +1,33 @@
-package io.sim.projeto;
+package io.sim.company;
 
 import java.io.File;
 import java.util.ArrayList;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class RouteExtractor {
+public class Rota {
+    private String id;
+    private String edges;
 
-    public RouteExtractor() {
-        
+    public Rota(String id, String edges) {
+        this.id = id;
+        this.edges = edges;
     }
 
-    public static ArrayList<Rota> createRoutesFromXML(String xmlFilePath) {
+    public String getID() {
+        return id;
+    }
+
+    public String getEdges(){
+        return edges;
+    }
+
+    public static ArrayList<Rota> criaRotasXML(String xmlFilePath) {
         ArrayList<Rota> routes = new ArrayList<>();
         
         try {

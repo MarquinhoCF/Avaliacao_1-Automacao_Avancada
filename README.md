@@ -1,26 +1,80 @@
-You need to install SUMO: https://eclipse.dev/sumo/
+# Projeto de Automação Avançada - AV1
 
-You need to install Maven: https://maven.apache.org/
+Este é o repositório para o projeto da AV1 da disciplina de Automação Avançada. O projeto consiste em simular um ambiente de mobilidade urbana com várias entidades interagindo entre si.
 
-You need to install VSCODE: https://code.visualstudio.com/download)https://code.visualstudio.com/download
+## Conteúdo
 
-After that, use Maven commands using Terminal to install the dependencies found in the Pom.xml file (there are other ways to do this on the internet)
+- [Instruções Gerais](#instruções-gerais)
+- [Mobility Company](#mobility-company)
+- [Alpha Bank e Account](#alpha-bank-e-account)
+- [Driver](#driver)
+- [Car](#car)
+- [Fuel Station](#fuel-station)
+- [Geração de Relatórios e Gráficos](#geração-de-relatórios-e-gráficos)
+- [Requisitos de Execução](#requisitos_de_execução)
 
-Example of command using Terminal:
-mvn install:install-file -Dfile="YOURPATH\vscode-workspace\sim\lib\libsumo-1.18.0.jar" -DgroupId="libsumo-1.18.0" -DartifactId="libsumo-1.18.0" -Dversion="libsumo-1.18.0" -Dpackaging="jar" -DgeneratePom=true
+## Instruções Gerais
 
-This command will enable what you can found in the Pom.xml file:
+O projeto é composto por diversas partes que envolvem a criação de várias classes e entidades para simular um ambiente de mobilidade. Certifique-se de seguir as instruções e requisitos gerais fornecidos pelo professor no início da descrição da AV1.
 
-![image](https://github.com/21lab-technology/sim/assets/94874350/5f4e1f33-5a2b-4a5f-aacc-5ebf0c3b3df6)
+## Mobility Company
 
-At YOURPATH\vscode-workspace\sim\src\main\java\sim\traci4j you will find support for TraCI - Interact with the Simulation in the source code. TraCI4J - A Java Package implementing the TraCI Protocol.
+A Mobility Company é a entidade principal que gerencia rotas e realiza pagamentos aos motoristas. Nesta parte do projeto, você deverá implementar a classe Mobility Company como um servidor e criar rotas para serem executadas.
 
-![image](https://github.com/21lab-technology/sim/assets/94874350/9861cc7a-41ae-44b1-8b5f-fbc02865d611)
+## Alpha Bank e Account
 
-*****To use it, make the necessary changes in the source code, starting with the correct way to connect with SUMO*****
+O Alpha Bank é responsável por lidar com as transações financeiras entre a empresa, motoristas e postos de gasolina. Você precisará criar a classe Alpha Bank e implementar a lógica de contas correntes para a empresa, motoristas e postos de gasolina.
 
-This is very important, it allows the actuation (Actuating on Vehicles): https://cst.fee.unicamp.br/sites/default/files/sumo/sumo-roadmap.pdf
+## Driver
 
-Please read the documentation: Another complex class in TraCI4J (even though not so complex as the TrafficLight class) is the Vehicle class. It is important to know that in SUMO, each Vehicle is an object with its own attributes and behavior. Because there are many vehicles which in principle might behave equally, it is possible to define Vehicle Types, generalizing some properties which will remain the same for all the vehicles of the same type. ****From the point of view of a Vehicle Type, it is possible to redefine most of the vehicle type parameters, like acceleration and deceleration, length, maximum speed and minimum gap to other vehicles. Specifically to each Vehicle, it is possible to define and redefine the vehicle color, the change lane model, the route intended by the vehicle, the speed and the final target. It is possible still to grab information about the vehicle CO2 emission, the CO emission, the actual edge where the vehicle is, the actual lane, the position within the lane, the fuel consumption, the Hc emission, the noise emission, the NOx emission, the PMx emission, the overall position (not the relative position within the lane) and the vehicle’s id and type.****
-Again, just like in the case of Traffic Lights, ****to actuate in a vehicle will demand some responsibility. As it is possible to change vehicle’s routes, there is always a chance that the reprogrammed route is unfeasible. In this case, this will make the vehicle to be “teleported” out from the simulation before the final route is reached. 
-If you change the speed, SUMO will assume that you are controlling the vehicle and will maintain the speed until you command another change in speed or give back to SUMO the control (by setting a speed of -1). This can potentially cause accidents and indeed SUMO is prepared to handle situations like accidents and crashes that might congestion the affected lane and create delays in traffic, just like in a real case.****
+Os motoristas prestam serviços à empresa, executando rotas designadas. Nesta parte, você criará a classe Driver e implementará a lógica para lidar com rotas e pagamentos.
+
+## Car
+
+Os carros são usados pelos motoristas para executar as rotas. Nesta parte, você criará a classe Car, lidará com o abastecimento e coletará dados para relatórios.
+
+## Fuel Station
+
+Os postos de gasolina permitem que os carros se abasteçam. Crie a classe Fuel Station, gerencie o abastecimento e lide com os pagamentos dos motoristas.
+
+## Geração de Relatórios e Gráficos
+
+Criação de relatórios gerenciais em Excel e gráficos em tempo real para visualizar dados importantes do ambiente de mobilidade.
+
+## Requisitos do Projeto
+
+Para executar este projeto de simulação de mobilidade urbana, você precisará configurar seu ambiente corretamente. Siga estas etapas para preparar seu sistema:
+
+### Instalação de Ferramentas Necessárias
+
+Antes de começar, certifique-se de ter instalado as seguintes ferramentas:
+
+1. **SUMO:** Você precisa instalar o SUMO, uma ferramenta de simulação de tráfego. Baixe e instale a versão mais recente do SUMO no [site oficial](https://eclipse.dev/sumo/).
+
+2. **Maven:** O Maven é uma ferramenta de automação de compilação e gerenciamento de dependências para Java. Você pode baixar e instalar o Maven do [site oficial](https://maven.apache.org/).
+
+3. **Visual Studio Code (VSCode):** Um ambiente de desenvolvimento de código aberto. Você pode baixar e instalar o VSCode do [site oficial](https://code.visualstudio.com/download).
+
+### Configurando as Dependências do Projeto
+
+Após instalar o SUMO, o Maven e o VSCode, você precisará configurar as dependências do projeto. Siga estas etapas para fazer isso:
+
+1. **Abra um Terminal:** Abra um terminal no seu sistema operacional.
+
+2. **Instale as Dependências com o Maven:** No terminal, navegue até o diretório do seu projeto e execute os seguintes comandos Maven para instalar as dependências listadas no arquivo `Pom.xml`. Por exemplo:
+
+   ```bash
+   mvn install:install-file -Dfile="SEUCAMINHO\vscode-workspace\sim\lib\libsumo-1.18.0.jar" -DgroupId="libsumo-1.18.0" -DartifactId="libsumo-1.18.0" -Dversion="libsumo-1.18.0" -Dpackaging="jar" -DgeneratePom=true
+   ```
+
+   Certifique-se de substituir `"SEUCAMINHO"` pelo caminho real no qual você baixou o projeto.
+
+3. **Realize as Alterações Necessárias no Código Fonte:** No diretório do seu projeto, navegue até `vscode-workspace\sim\src\main\java\sim\traci4j` e faça as alterações necessárias no código fonte para se conectar corretamente ao SUMO. Certifique-se de seguir as orientações fornecidas na documentação, especialmente para a classe `Vehicle`.
+
+   Importante: Ao atuar em um veículo, tenha cuidado, pois é possível alterar as rotas dos veículos. Se uma rota reprogramada for inviável, o veículo será "teletransportado" para fora da simulação antes de atingir a rota final.
+
+   Tenha em mente que ao alterar a velocidade de um veículo, o SUMO assume que você está controlando o veículo e manterá a velocidade até que você comande outra alteração ou devolva o controle ao SUMO (definindo a velocidade como -1). Isso pode potencialmente causar acidentes, e o SUMO está preparado para lidar com situações como acidentes e congestionamentos que podem afetar as vias e criar atrasos no tráfego, assim como em situações reais.
+
+## Autor
+
+Marcos Carvalho Ferreira

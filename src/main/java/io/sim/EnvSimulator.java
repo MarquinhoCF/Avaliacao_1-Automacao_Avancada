@@ -1,53 +1,68 @@
 package io.sim;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 
-import de.tudresden.sumo.cmd.Vehicle;
-import de.tudresden.sumo.objects.SumoColor;
-import de.tudresden.sumo.objects.SumoStringList;
-import io.sim.projeto.CarCreator;
-import io.sim.projeto.Company;
-import io.sim.projeto.DriverCreator;
-import io.sim.projeto.Driver;
+import io.sim.driver.Driver;
+import io.sim.company.Company;
 import it.polito.appeal.traci.SumoTraciConnection;
 
-public class EnvSimulator extends Thread{
-
+/**Classe que faz a conexao com o SUMO e cria os objetos da simulacao. 
+ * Acaba funcionando como uma classe principal
+ */
+public class EnvSimulator extends Thread {
     private SumoTraciConnection sumo;
+	private static String carHost;
+	private static int portaSUMO; // NEWF
+	private static int portaCompany;
+	private static long taxaAquisicao;
+	private static int numDrivers;
 
-    public EnvSimulator(){
-
-    }
-
-    public void run(){
-
+    public EnvSimulator() {
 		/* SUMO */
 		String sumo_bin = "sumo-gui";		
 		String config_file = "map/map.sumo.cfg";
 		
 		// Sumo connection
 		this.sumo = new SumoTraciConnection(sumo_bin, config_file);
+		
+		carHost = "localhost";
+		portaSUMO = 12345;
+		portaCompany = 23415;
+		taxaAquisicao = 500;
+		numDrivers = 100;
+	}
+
+    public void run() {
+		// Start e configurações inicias do SUMO
 		sumo.addOption("start", "1"); // auto-run on GUI show
-		//sumo.addOption("quit-on-end", "1"); // auto-close on end
+		sumo.addOption("quit-on-end", "1"); // auto-close on end
 
 		try {
-			sumo.runServer(12345);
-			String localHost = "127.0.0.1";
-			int portaServidor = 23415;
-			int qtdCars = 10;
+			sumo.runServer(portaSUMO); // porta servidor SUMO
+			System.out.println("SUMO conectado.");
+			Thread.sleep(5000);
 
-			ArrayList<Car> carList = CarCreator.createCarList(qtdCars, sumo, localHost, portaServidor);
-			ArrayList<Driver> DriverList = DriverCreator.createDrivers(sumo, carList);
-			Company company = new Company(23415, "data/dados.xml", sumo, qtdCars, DriverList);
+			ServerSocket companyServer = new ServerSocket(portaCompany);
+			Company company = new Company(companyServer, "data/dados.xml", numDrivers);
 			company.start();
-		
+
+			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução
+			ArrayList<Driver> drivers = DriverANDCarCreator.createDriversANDCars(numDrivers, taxaAquisicao, sumo, carHost, portaCompany);
+			for(int i = 0; i < drivers.size(); i++) {
+				drivers.get(i).join();
+			}
+
+			companyServer.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		System.out.println("Encerrando EnvSimulator");
     }
-
 }
