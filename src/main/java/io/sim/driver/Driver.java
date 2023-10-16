@@ -37,14 +37,14 @@ public class Driver extends Thread {
             System.out.println("Iniciando " + this.driverID);
             Thread t = new Thread(this.car);
             t.start();
+
             while(Company.temRotasDisponiveis()) {
                 Thread.sleep(this.car.getAcquisitionRate());
-                if(car.getCarRepport().getCarStatus() == "finalizado") {
-                    // retirar de routesInExe e colocar em routesExecuted
+                if(car.getCarStatus() == "finalizado") {
                     System.out.println(this.driverID + " rota "+ this.rotasDisp.get(0).getID() + " finalizada");
                     rotasTerminadas.add(rotaAtual);
                     initRoute = false;
-                } else if((this.car.getCarRepport().getCarStatus() == "rodando") && !initRoute) {
+                } else if((this.car.getCarStatus() == "rodando") && !initRoute) {
                     System.out.println(this.driverID + " rota "+ this.car.getRota().getID() +" iniciada");
                     rotaAtual = car.getRota();
                     initRoute = true; 

@@ -2,6 +2,14 @@
 
 Este é o repositório para o projeto da AV1 da disciplina de Automação Avançada. O projeto consiste em simular um ambiente de mobilidade urbana com várias entidades interagindo entre si.
 
+### Autor
+
+Marcos Carvalho Ferreira
+
+Matrícula: 202010203
+
+Email: marcos.ferreira8@estudante.ufla.br
+
 ![image](https://github.com/MarquinhoCF/Avaliacao_1-Automacao_Avancada/blob/main/assets/Ilustracao_AV1.png)
 
 ## Conteúdo
@@ -76,7 +84,3 @@ Após instalar o SUMO, o Maven e o VSCode, você precisará configurar as depend
    Importante: Ao atuar em um veículo, tenha cuidado, pois é possível alterar as rotas dos veículos. Se uma rota reprogramada for inviável, o veículo será "teletransportado" para fora da simulação antes de atingir a rota final.
 
    Tenha em mente que ao alterar a velocidade de um veículo, o SUMO assume que você está controlando o veículo e manterá a velocidade até que você comande outra alteração ou devolva o controle ao SUMO (definindo a velocidade como -1). Isso pode potencialmente causar acidentes, e o SUMO está preparado para lidar com situações como acidentes e congestionamentos que podem afetar as vias e criar atrasos no tráfego, assim como em situações reais.
-
-## Autor
-
-Marcos Carvalho Ferreira

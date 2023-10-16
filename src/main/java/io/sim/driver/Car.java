@@ -10,6 +10,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import org.json.JSONObject;
+
 import it.polito.appeal.traci.SumoTraciConnection;
 import javafx.animation.RotateTransition;
 import de.tudresden.sumo.objects.SumoColor;
@@ -26,11 +28,7 @@ public class Car extends Vehicle implements Runnable {
     private int companyServerPort;
     private String companyServerHost; 
 	private DataInputStream entrada;
-    private ObjectOutputStream saida;
-
-    // atributos de sincronizacao
-    // private boolean ocupado = false;
-    // private Object monitor = new Object(); // sincronizacao
+	private DataOutputStream saida;
 	
 	// atributos da classe
 	private String idCar; // id do carro
@@ -45,10 +43,10 @@ public class Car extends Vehicle implements Runnable {
 	private double fuelPrice; 		// price in liters
 	private int personCapacity;		// the total number of persons that can ride in this vehicle
 	private int personNumber;		// the total number of persons which are riding in this vehicle
-	private double speed = 50; //NEWF
+	private double speed; //NEWF
 	private Rota rota;
-	// private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
-	private DrivingData carRepport;
+	private String carStatus;
+	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
 	private TransportService ts;
 
 	public Car(boolean _on_off, String _idCar, SumoColor _colorCar, String _driverID, SumoTraciConnection _sumo, long _acquisitionRate,
@@ -80,8 +78,10 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.carRepport = this.atualizaStatusERota("aguardando", "");
-		// this.drivingRepport = new ArrayList<DrivingData>();
+		this.speed = 50;
+		this.rota = null;
+		this.carStatus = "aguardando";
+		this.drivingRepport = new ArrayList<DrivingData>();
 	}
 
 	@Override
@@ -90,47 +90,47 @@ public class Car extends Vehicle implements Runnable {
 		try {
             socket = new Socket(this.companyServerHost, this.companyServerPort);
             entrada = new DataInputStream(socket.getInputStream());
-            saida = new ObjectOutputStream(socket.getOutputStream());
+			saida = new DataOutputStream(socket.getOutputStream());
 
 			System.out.println(this.idCar + " conectado!!");
 
 			while (!terminado) {
-				saida.writeObject(this.carRepport);
+				// Manda "aguardando" da primeira vez
+				saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 				System.out.println(this.idCar + " aguardando rota");
 				rota = (Rota) transfString2Rota(entrada.readUTF());
 				System.out.println(this.idCar + " leu " + rota.getID());
 				ts = new TransportService(true, this.idCar, rota, this, this.sumo);
 				ts.start();
-				System.out.println("CAR - ts com rota");
-				System.out.println("CAR - ts on");
+				System.out.println("CAR - TransportService ativo");
 				String edgeFinal = this.getEdgeFinal(); 
 				this.on_off = true;
 				Thread.sleep(this.acquisitionRate);
 
-				// mudar nome para on
 				while (this.on_off) {
 					String edgeAtual = (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar));
 					Thread.sleep(this.acquisitionRate);
 					if(verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " acabou a rota.");
 						this.ts.setOn_off(false);
-						this.carRepport = this.atualizaStatus("finalizado");
-						saida.writeObject(this.carRepport);
+						this.carStatus = "finalizado";
+						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 						this.on_off = false;
 					} else {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
-						this.carRepport = this.atualizaSensores();
-						saida.writeObject(this.carRepport); // DESCOMENTAR QUANDO O RELATORIO ESTIVER OK
+						atualizaSensores();
+						this.carStatus = "rodando";
+						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 					}
 				}
 				System.out.println(this.idCar + " off.");
 
 				if(!terminado) {
-					this.carRepport = this.atualizaStatus("aguardando");
+					this.carStatus = "aguardando";
 				}
 
 				if(terminado) {
-					this.carRepport = this.atualizaStatus("encerrado");
+					this.carStatus = "encerrado";
 				}
 			}
 			System.out.println("Encerrando: " + idCar);
@@ -138,9 +138,7 @@ public class Car extends Vehicle implements Runnable {
 			saida.close();
 			socket.close();
 			this.ts.setTerminado(true);
-        }
-		catch (Exception e)
-		{
+        } catch (Exception e) {
             // TODO Car-generated catch block
             e.printStackTrace();
         }
@@ -148,8 +146,7 @@ public class Car extends Vehicle implements Runnable {
 		System.out.println(this.idCar + " encerrado.");
 	}
 
-	private DrivingData atualizaSensores() {
-		DrivingData repport = atualizaStatusERota("aguardando", "");
+	private void atualizaSensores() {
 		try {
 			if (!this.getSumo().isClosed()) {
 				SumoPosition2D sumoPosition2D;
@@ -161,9 +158,8 @@ public class Car extends Vehicle implements Runnable {
 				// System.out.println("RouteIndex: " + this.sumo.do_job_get(Vehicle.getRouteIndex(this.idCar)));
 				
 				// Criacao dos dados de conducao do veiculo
-				repport = atualizaDrivingData(
-
-						"rodando", this.idCar, this.driverID, System.currentTimeMillis(), sumoPosition2D.x, sumoPosition2D.y,
+				DrivingData repport = new DrivingData(
+						this.idCar, this.driverID, System.currentTimeMillis(), sumoPosition2D.x, sumoPosition2D.y,
 						(String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)),
 						(String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)),
 						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)),
@@ -200,7 +196,7 @@ public class Car extends Vehicle implements Runnable {
 				// velocidadePermitida = (double)
 				// sumo.do_job_get(Vehicle.getAllowedSpeed(this.idSumoVehicle));
 
-				// this.drivingRepport.add(repport);
+				this.drivingRepport.add(repport);
 
 				//System.out.println("Data: " + this.drivingRepport.size());
 				// System.out.println("idCar = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getCarID());
@@ -258,30 +254,22 @@ public class Car extends Vehicle implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		return repport;
 	}
 
-	private DrivingData atualizaDrivingData(String _carState, String _CarID, String _driverID, long _timeStamp, double _x_Position,
-	double _y_Position, String _roadIDSUMO, String _routeIDSUMO, double _speed, double _odometer, double _fuelConsumption,
-	double _averageFuelConsumption, int _fuelType, double _fuelPrice, double _co2Emission, double _HCEmission, int _personCapacity,
-	int _personNumber) {
-		DrivingData _repport = new DrivingData(_carState, _CarID, _driverID, _timeStamp, _x_Position, _y_Position, _roadIDSUMO, 
-		_routeIDSUMO, _speed, _odometer, _fuelConsumption, _averageFuelConsumption, _fuelType, _fuelPrice, _co2Emission, _HCEmission, 
-		_personCapacity, _personNumber);
-		return _repport;
+	private JSONObject criaJSONComunicacao(String carStatus) {
+		JSONObject my_json = new JSONObject();
+		my_json.put("Status do Carro", carStatus);
+		if (rota != null) {
+			my_json.put("ID da Rota", rota.getID());
+		} else {
+			my_json.put("ID da Rota", "");
+		}
+		
+		return my_json;
 	}
 
-	private DrivingData atualizaStatusERota(String _carState, String _routeIDSUMO) {
-		DrivingData _repport = atualizaDrivingData(_carState, idCar, driverID, 0, 0, 0, 
-		"", _routeIDSUMO, 0, 0, 0, 1, this.fuelType,
-		this.fuelPrice,0, 0, this.personCapacity, this.personNumber);
-		return _repport;	
-	}
-
-	private DrivingData atualizaStatus(String _carState) {
-		DrivingData _repport = atualizaStatusERota(_carState, this.rota.getID());
-		return _repport;	
+	public String getCarStatus() {
+		return carStatus;
 	}
 
 	public Rota getRota() {
@@ -364,23 +352,6 @@ public class Car extends Vehicle implements Runnable {
 		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
 	}
 
-	public DrivingData getCarRepport() {
-		return carRepport;
-	}
-
-	// Verifica se a rota atual terminou
-	private boolean verificaRotaTerminada(String _edgeAtual, String _edgeFinal) throws Exception {
-		// Cria lista de IDs dos carros do SUMO
-		SumoStringList lista = (SumoStringList) this.sumo.do_job_get(Vehicle.getIDList());
-
-		// Verificação dupla para determinar o término da Rota
-		if(!lista.contains(idCar) && (_edgeFinal.equals(_edgeAtual))) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	// Pega a última posição da Rota
 	// Método auxiliar para verificar se a rota terminou
 	private String getEdgeFinal() {
@@ -391,6 +362,19 @@ public class Car extends Vehicle implements Runnable {
 			edge.add(e);
 		}
 		return edge.get(edge.size() - 1);
+	}
+
+	// Verifica se a rota atual terminou
+	private boolean verificaRotaTerminada(String _edgeAtual, String _edgeFinal) throws Exception {
+		// Cria lista de IDs dos carros do SUMO
+		SumoStringList lista = (SumoStringList) this.sumo.do_job_get(Vehicle.getIDList());
+
+		// Verificação dupla para determinar o término da Rota
+		if (!lista.contains(idCar) && (_edgeFinal.equals(_edgeAtual))) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Transforma uma String em uma Rota

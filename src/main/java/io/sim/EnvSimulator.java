@@ -31,7 +31,7 @@ public class EnvSimulator extends Thread {
 		portaSUMO = 12345;
 		portaCompany = 23415;
 		taxaAquisicao = 500;
-		numDrivers = 100;
+		numDrivers = 1;
 	}
 
     public void run() {
@@ -45,11 +45,11 @@ public class EnvSimulator extends Thread {
 			Thread.sleep(5000);
 
 			ServerSocket companyServer = new ServerSocket(portaCompany);
-			Company company = new Company(companyServer, "data/dados.xml", numDrivers);
+			Company company = new Company(companyServer, "data/dados2.xml", numDrivers);
 			company.start();
 
 			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução
-			ArrayList<Driver> drivers = DriverANDCarCreator.createDriversANDCars(numDrivers, taxaAquisicao, sumo, carHost, portaCompany);
+			ArrayList<Driver> drivers = DriverANDCarCreator.criaListaDrivers(numDrivers, taxaAquisicao, sumo, carHost, portaCompany);
 			for(int i = 0; i < drivers.size(); i++) {
 				drivers.get(i).join();
 			}

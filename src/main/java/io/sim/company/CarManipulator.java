@@ -3,16 +3,14 @@ package io.sim.company;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.Socket;
 
-import io.sim.driver.DrivingData;
-import io.sim.driver.TransportService;
+import org.json.JSONObject;
 
 public class CarManipulator extends Thread {
     private Socket carSocket;
-    private DataInputStream input;
-    private DataOutputStream output;
+    private DataInputStream entrada;
+    private DataOutputStream saida;
 
     private Company company;
 
@@ -23,8 +21,9 @@ public class CarManipulator extends Thread {
         this.company = _company;
         this.carSocket = _carSocket;
         try {
-            input = new DataInputStream(carSocket.getInputStream());
-            output = new DataOutputStream(carSocket.getOutputStream());
+            // variaveis de entrada e saida do servidor
+            entrada = new DataInputStream(carSocket.getInputStream());
+            saida = new DataOutputStream(carSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -35,33 +34,31 @@ public class CarManipulator extends Thread {
     @Override
     public void run() {
         try {
-            // variaveis de entrada e saida do servidor
-            ObjectInputStream entrada = new ObjectInputStream(carSocket.getInputStream());
-            DataOutputStream saida = new DataOutputStream(carSocket.getOutputStream());
-
-            String mensagem = "";
+            String StatusDoCarro = "";
 
              // loop principal
-            while(!mensagem.equals("encerrado")) {
+            while(!StatusDoCarro.equals("encerrado")) {
                 System.out.println("Aguardando mensagem...");
-                DrivingData objIn = (DrivingData) entrada.readObject();
+                JSONObject jsonComunicacao = new JSONObject((String) entrada.readUTF());
+                StatusDoCarro = jsonComunicacao.getString("Status do Carro"); // lê solicitacao do cliente
+
                 // verifica distancia para pagamento
-                mensagem = objIn.getCarStatus(); // lê solicitacao do cliente
-                System.out.println("SMC ouviu " + mensagem);
-                if (mensagem.equals("aguardando")) {
+                
+                System.out.println("SMC ouviu " + StatusDoCarro);
+                if (StatusDoCarro.equals("aguardando")) {
                     synchronized (sincroniza) {
                         Rota resposta = company.executarRota();
                         
                         System.out.println("SMC - Liberando rota:\n" + resposta.getID());
                         saida.writeUTF(company.transfRota2String(resposta));
                     }
-                } else if(mensagem.equals("finalizado")) {
-                    String routeID = objIn.getRouteIDSUMO();
+                } else if(StatusDoCarro.equals("finalizado")) {
+                    String routeID = jsonComunicacao.getString("ID da Rota");
                     System.out.println("SMC - Rota " + routeID + " finalizada.");
                     this.company.terminarRota(routeID);
-                } else if(mensagem.equals("rodando")) {
+                } else if(StatusDoCarro.equals("rodando")) {
                     // a principio, nao faz nada
-                } else if (mensagem.equals("encerrado")) {
+                } else if (StatusDoCarro.equals("encerrado")) {
                     break;
                 }
             }
@@ -70,8 +67,11 @@ public class CarManipulator extends Thread {
             entrada.close();
             saida.close();
             carSocket.close();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            //} catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
+
+    
 }

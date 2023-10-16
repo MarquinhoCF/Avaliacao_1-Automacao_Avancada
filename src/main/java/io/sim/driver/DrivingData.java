@@ -1,15 +1,16 @@
 package io.sim.driver;
 
-import java.io.Serializable;
+//import java.io.Serializable;
 
 /**Armazena dados do veiculo
  * Funcao organizacional, para ser usada no relatorio via Excel.
  */
-public class DrivingData implements Serializable{
+
+//public class DrivingData implements Serializable{
+public class DrivingData {
 
 	/* SUMO's data */
 
-	private String carStatus;
 	private String autoID;
 	private String driverID;
 	private long timeStamp; 			// System.currentTimeMillis()
@@ -140,12 +141,11 @@ public class DrivingData implements Serializable{
 	//private double k1; // Driver Score for Fuel Usage (%)
 
 	public DrivingData(
-
-			String _carStatus, String _autoID, String _driverID, long _timeStamp, double _x_Position, double _y_Position,
+			String _autoID, String _driverID, long _timeStamp, double _x_Position, double _y_Position,
 			String _roadIDSUMO, String _routeIDSUMO, double _speed, double _odometer, double _fuelConsumption,
-			double _averageFuelConsumption, int _fuelType, double _fuelPrice, double _co2Emission, double _HCEmission, int _personCapacity, int _personNumber) {
+			double _averageFuelConsumption, int _fuelType, double _fuelPrice, double _co2Emission, 
+			double _HCEmission, int _personCapacity, int _personNumber) {
 
-		this.carStatus = _carStatus;
 		this.autoID = _autoID;
 		this.driverID = _autoID;
 		this.timeStamp = _timeStamp;
@@ -164,10 +164,6 @@ public class DrivingData implements Serializable{
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
 
-	}
-
-	public String getCarStatus() {
-		return carStatus;
 	}
 
 	public double getSpeed() {

@@ -68,7 +68,7 @@ public class Company extends Thread {
                 if(canectandoCars) {
                     for(int i = 0; i < numDrivers; i++) {
                         // conecta os clientes -> IMP mudar para ser feito paralelamente (ou n)
-                        System.out.println("Company - Esperando para conectar " + (i+1));
+                        System.out.println("Company - Esperando para conectar " + (i + 1));
                         Socket socket = serverSocket.accept();
                         System.out.println("Car conectado");
 
@@ -91,6 +91,12 @@ public class Company extends Thread {
         return rotasDisponiveis;
     }
 
+    public String transfRota2String(Rota _route) {
+        String stringRota;
+        stringRota = _route.getID() + "," + _route.getEdges();
+        return stringRota;
+    }
+
     // Libera uma rota para o cliente que a solicitou. Para isso, remove de "rotasDisp" e adiciona em "rotasEmExec"
     public Rota executarRota() {
         synchronized (sincroniza) {
@@ -109,12 +115,6 @@ public class Company extends Thread {
             }
             rotasTerminadas.add(rotasEmExec.remove(i));
         }
-    }
-
-    public String transfRota2String(Rota _route) {
-        String stringRota;
-        stringRota = _route.getID() + "," + _route.getEdges();
-        return stringRota;
     }
 
 }
