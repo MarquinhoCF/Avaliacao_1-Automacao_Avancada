@@ -2,6 +2,8 @@
 
 Este é o repositório para o projeto da AV1 da disciplina de Automação Avançada. O projeto consiste em simular um ambiente de mobilidade urbana com várias entidades interagindo entre si.
 
+![image](https://github.com/MarquinhoCF/Avaliacao_1-Automacao_Avancada/assets/ilustracao_AV1.png)
+
 ## Conteúdo
 
 - [Instruções Gerais](#instruções-gerais)
@@ -11,7 +13,7 @@ Este é o repositório para o projeto da AV1 da disciplina de Automação Avanç
 - [Car](#car)
 - [Fuel Station](#fuel-station)
 - [Geração de Relatórios e Gráficos](#geração-de-relatórios-e-gráficos)
-- [Requisitos de Execução](#requisitos_de_execução)
+- [Requisitos de Execução](#requisitos-de-execução)
 
 ## Instruções Gerais
 
@@ -49,7 +51,7 @@ Para executar este projeto de simulação de mobilidade urbana, você precisará
 
 Antes de começar, certifique-se de ter instalado as seguintes ferramentas:
 
-1. **SUMO:** Você precisa instalar o SUMO, uma ferramenta de simulação de tráfego. Baixe e instale a versão mais recente do SUMO no [site oficial](https://eclipse.dev/sumo/).
+1. **SUMO:** Você precisa instalar o SUMO, uma ferramenta de simulação de tráfego. Baixe e instale a versão mais recente do SUMO no [site oficial](https://sumo.dlr.de/docs/index.html).
 
 2. **Maven:** O Maven é uma ferramenta de automação de compilação e gerenciamento de dependências para Java. Você pode baixar e instalar o Maven do [site oficial](https://maven.apache.org/).
 
