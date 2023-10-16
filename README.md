@@ -2,7 +2,7 @@
 
 Este é o repositório para o projeto da AV1 da disciplina de Automação Avançada. O projeto consiste em simular um ambiente de mobilidade urbana com várias entidades interagindo entre si.
 
-![image](https://github.com/MarquinhoCF/Avaliacao_1-Automacao_Avancada/assets/Ilustracao_AV1.png)
+![image](https://github.com/MarquinhoCF/Avaliacao_1-Automacao_Avancada/blob/main/assets/Ilustracao_AV1.png)
 
 ## Conteúdo
 
