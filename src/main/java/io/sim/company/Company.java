@@ -1,9 +1,16 @@
 package io.sim.company;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import org.json.JSONObject;
+
+import io.sim.bank.Account;
+import io.sim.bank.AlphaBank;
 
 public class Company extends Thread {
     // Atributos de Servidor
@@ -21,10 +28,15 @@ public class Company extends Thread {
     private static double preco;
     private static int numDrivers;
 
-    // cliente AlphaBank
-    // private static Account account;
+    // Atributos como cliente de AlphaBank
+    private Socket socket;
+    private Account account;
+    private int alphaBankServerPort;
+    private String alphaBankServerHost; 
+    private DataInputStream entrada;
+    private DataOutputStream saida;
     
-    public Company(ServerSocket serverSocket, String xmlPath, int _numDrivers) {
+    public Company(ServerSocket serverSocket, String xmlPath, int _numDrivers, int _alphaBankServerPort, String _alphaBankServerHost) {
         // Inicializa servidor
         this.serverSocket = serverSocket;
 
@@ -40,12 +52,23 @@ public class Company extends Thread {
         rotasTerminadas = new ArrayList<Rota>();
         preco = 3.25;
         numDrivers = _numDrivers;
+
+        // Atributos como cliente de AlphaBank
+        alphaBankServerPort = _alphaBankServerPort;
+        alphaBankServerHost = _alphaBankServerHost;
+        account = Account.criaAccount("Company", 100000);
     }
 
     @Override
     public void run() {
         try {
             System.out.println("Company iniciando...");
+
+            socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
+            entrada = new DataInputStream(socket.getInputStream());
+			saida = new DataOutputStream(socket.getOutputStream());
+            saida.writeUTF(Account.criaJSONAccount(account).toString());
+            System.out.println("Company se conectou ao Servido do AlphaBank!!");
 
             while (rotasDisponiveis) {
                 // Pequeno delay para evitar problemas
@@ -117,4 +140,9 @@ public class Company extends Thread {
         }
     }
 
+    public void fazerPagamento(String driverID) throws IOException {
+        // Ao invés disso deveria chamar o BotPayment!!
+        JSONObject transferencia = AlphaBank.criaJSONTransferencia("Transferencia", account.getAccountID(), account.getSenha(), driverID, this.preco);
+        saida.writeUTF(transferencia.toString());
+    }
 }

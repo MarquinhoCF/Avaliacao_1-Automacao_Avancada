@@ -33,7 +33,7 @@ public class Driver extends Thread {
     private boolean initRoute = false;
     private long saldoInicial;
 
-    public Driver(String _driverID, Car _car, long _taxaAquisicao) {
+    public Driver(String _driverID, Car _car, long _taxaAquisicao, int _alphaBankServerPort, String _alphaBankServerHost) {
         this.driverID = _driverID;
         this.car = _car;
         this.taxaAquisicao = _taxaAquisicao;
@@ -41,6 +41,9 @@ public class Driver extends Thread {
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
         this.saldoInicial = 0;
+        this.alphaBankServerPort = _alphaBankServerPort;
+        this.alphaBankServerHost = _alphaBankServerHost;
+        this.account = Account.criaAccount(driverID, saldoInicial);
 
         // pensar na logica de inicializacao do TransporteService e do Car
         // BotPayment payment = new BotPayment(fuelPrice);
@@ -51,10 +54,11 @@ public class Driver extends Thread {
         try {
             System.out.println("Iniciando " + this.driverID);
             
-            // socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
-            // entrada = new DataInputStream(socket.getInputStream());
-			// saida = new DataOutputStream(socket.getOutputStream());
-            // saida.writeUTF(criaJSONCriacaoAccount().toString());
+            socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
+            entrada = new DataInputStream(socket.getInputStream());
+			saida = new DataOutputStream(socket.getOutputStream());
+            saida.writeUTF(Account.criaJSONAccount(account).toString());
+            System.out.println(driverID + " se conectou ao Servido do AlphaBank!!");
             
             Thread t = new Thread(this.car);
             t.start();
@@ -74,33 +78,12 @@ public class Driver extends Thread {
             car.setTerminado(true);  
             System.out.println("Encerrando " + driverID);
             // this.car.join();
-        // } catch (IOException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
-
-    private JSONObject criaJSONCriacaoAccount() {
-		JSONObject my_json = new JSONObject();
-		my_json.put("Account ID", driverID);
-
-        // Gerando uma senha de 6 digitos aleatória
-        String numerosPermitidos = "0123456789";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder(6);
-        for (int i = 0; i < 6; i++) {
-            int index = random.nextInt(numerosPermitidos.length());
-            char randomNumber = numerosPermitidos.charAt(index);
-            sb.append(randomNumber);
-        }
-        String senha = sb.toString();
-		my_json.put("Senha", senha);
-
-		my_json.put("Saldo", this.saldoInicial);
-		
-		return my_json;
-	}
 }

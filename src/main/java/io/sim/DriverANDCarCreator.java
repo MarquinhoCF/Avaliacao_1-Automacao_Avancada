@@ -10,15 +10,15 @@ import java.util.Random;
 import de.tudresden.sumo.objects.SumoColor;
 
 public class DriverANDCarCreator {
-    public static ArrayList<Driver> criaListaDrivers(int qtdDrivers, long taxaAquisicao, SumoTraciConnection sumo, String companyServerHost, int portaCompanny) {
+    public static ArrayList<Driver> criaListaDrivers(int qtdDrivers, long taxaAquisicao, SumoTraciConnection sumo, String host, int portaCompanny, int portaAlphaBank) {
         ArrayList<Driver> drivers = new ArrayList<>();
 
         for (int i = 0; i < qtdDrivers; i++) {
             String driverID = "Driver " + (i + 1);
             String carID = "Car " + (i + 1);
-            Car car = createCar(carID, driverID, taxaAquisicao, sumo, companyServerHost, portaCompanny);
+            Car car = createCar(carID, driverID, taxaAquisicao, sumo, host, portaCompanny);
 
-            Driver driver = new Driver(driverID, car, taxaAquisicao);
+            Driver driver = new Driver(driverID, car, taxaAquisicao, portaAlphaBank, host);
             drivers.add(driver);
             driver.start();
         }
@@ -27,7 +27,7 @@ public class DriverANDCarCreator {
     }
 
     // Método estático para criar um de objeto Car com cores aleatórias
-    public static Car createCar(String idCar, String driverID, long taxaAquisicao, SumoTraciConnection sumo, String companyServerHost, int companyServerPort) {
+    public static Car createCar(String idCar, String driverID, long taxaAquisicao, SumoTraciConnection sumo, String host, int companyServerPort) {
         try {
             // Defina as características comuns para os novos objetos Auto
             boolean on_off = false;
@@ -48,7 +48,7 @@ public class DriverANDCarCreator {
             );
         
             // Crie um novo objeto Car com características comuns e cor aleatória
-            Car car = new Car(on_off, idCar, randomColor, driverID, sumo, taxaAquisicao, fuelType, fuelPreferential, fuelPrice, personCapacity, personNumber, companyServerHost, companyServerPort);
+            Car car = new Car(on_off, idCar, randomColor, driverID, sumo, taxaAquisicao, fuelType, fuelPreferential, fuelPrice, personCapacity, personNumber, host, companyServerPort);
             return car;
         } catch (Exception e) {
             // TODO Auto-generated catch block

@@ -275,6 +275,7 @@ public class Car extends Vehicle implements Runnable {
 
 	private JSONObject criaJSONComunicacao(String carStatus) {
 		JSONObject my_json = new JSONObject();
+		my_json.put("Driver ID", driverID);
 		my_json.put("Status do Carro", carStatus);
 		if (rota != null) {
 			my_json.put("ID da Rota", rota.getID());
@@ -454,9 +455,9 @@ public class Car extends Vehicle implements Runnable {
 
 		double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
 
-		System.out.println(idCar + " percorreu " + distancia + "");
-		if (distancia > (distanciaPercorrida + 1000)) {
-			distanciaPercorrida += 1000;
+		System.out.println(idCar + " percorreu " + distancia + " metros");
+		if (distancia > (distanciaPercorrida + 100)) {
+			distanciaPercorrida += 100;
 		}
 	}
 }

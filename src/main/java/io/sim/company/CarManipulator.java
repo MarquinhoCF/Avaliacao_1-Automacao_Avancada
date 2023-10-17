@@ -7,6 +7,8 @@ import java.net.Socket;
 
 import org.json.JSONObject;
 
+import io.sim.bank.AlphaBank;
+
 public class CarManipulator extends Thread {
     private Socket carSocket;
     private DataInputStream entrada;
@@ -43,10 +45,11 @@ public class CarManipulator extends Thread {
                 JSONObject jsonComunicacao = new JSONObject((String) entrada.readUTF());
                 StatusDoCarro = jsonComunicacao.getString("Status do Carro"); // lê solicitacao do cliente
                 
-                double distanciaPercorrida = (double) jsonComunicacao.getLong("Distancia Percorrida");
+                long distanciaPercorrida = jsonComunicacao.getLong("Distancia Percorrida");
                 if (distanciaPercorrida > distanciaAnterior) {
-                    // Cria BotPayment
-                    System.out.println("CAR MANIPULATOR CRIOU BOTPAYMENT");
+                    System.out.println("CAR MANIPULATOR MANDA AS INFORMAÇÕES PARA O ACCOUNT MANIPULATOR");
+                    String driverID = jsonComunicacao.getString("Status do Carro");
+                    company.fazerPagamento(driverID);
                     distanciaAnterior = distanciaPercorrida;
                 } else {
                     distanciaAnterior = distanciaPercorrida;

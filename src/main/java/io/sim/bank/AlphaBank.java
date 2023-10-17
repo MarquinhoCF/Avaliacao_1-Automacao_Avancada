@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 import io.sim.company.Company;
 
 public class AlphaBank extends Thread {
@@ -18,10 +20,14 @@ public class AlphaBank extends Thread {
     private static ArrayList<Account> accounts;
     static int qtdClientes = 0;
 
+    // Atributo de sincronização
+    private Object sincroniza;
+
     public AlphaBank(ServerSocket serverSocket) throws IOException {
         this.serverAlphaBank = serverSocket;
         conexoes = new HashMap<>();
         accounts = new ArrayList<Account>();
+        this.sincroniza = new Object();
     }
 
     @Override
@@ -29,70 +35,78 @@ public class AlphaBank extends Thread {
         try {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
 
-            while (Company.temRotasDisponiveis()) {
+            while (true) {
                 Socket clientSocket = serverAlphaBank.accept();
                 System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
 
-                AccountManipulator accountManipulator = new AccountManipulator();
+                AccountManipulator accountManipulator = new AccountManipulator(clientSocket, this);
                 accountManipulator.start();
             }
-            System.out.println("Encerrando AlphaBank");
+            //System.out.println("Encerrando AlphaBank");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void conectar(String accountID, Socket socket) {
-        conexoes.put(accountID, socket);
+        synchronized (sincroniza) {
+            conexoes.put(accountID, socket);
+        }
     }
 
     public void adicionarAccount(String accountID, String senha, long saldo) {
-        Account conta = new Account(accountID, senha, saldo);
-        accounts.add(conta);
+        synchronized (sincroniza) {
+            Account conta = new Account(accountID, senha, saldo);
+            accounts.add(conta);
+        }
     }
 
-    public boolean hasAccount(int identifier) {
+    public boolean fazerLogin(String accountID, String senha) {
         for (Account account : accounts) {
-            if (account.getIdentifier() == identifier) {
-                return true;
+            if (account.getAccountID().equals(accountID)) {
+                if (account.getSenha().equals(senha)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    public boolean transfer(int senderID, int receiverID, double amount) {
-        Account sender = getAccountByID(senderID);
-        Account receiver = getAccountByID(receiverID);
-
-        if(sender == null){
-            System.out.println("SENDER");
-        }
-
-        if(receiver == null){
-            System.out.println("RECIEVER");
-        }
-
-        //System.out.println("PROBELMA COM FOI SENDER OU RECIEVER");
+    public boolean transferencia(String pagadorID, String recebedorID, double quantia) {
+        Account pagador = getAccountPeloID(pagadorID);
+        Account recebedor = getAccountPeloID(recebedorID);
         
-        if (sender != null && receiver != null) {
-            System.out.println("NAO FOI SENDER OU RECIEVER");
-            if (sender.getBalance() >= amount) {
-                sender.withdraw(amount);
-                receiver.deposit(amount);
-                return true;
+        synchronized (sincroniza) {
+            if (pagador != null && recebedor != null) {
+                if (pagador.getSaldo() >= quantia) {
+                    pagador.saque(quantia);
+                    recebedor.deposito(quantia);
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
     }
 
-    private Account getAccountByID(int identifier) {
+    private Account getAccountPeloID(String accountID) {
         for (Account account : accounts) {
-            if (account.getIdentifier() == identifier) {
+            if (account.getAccountID().equals(accountID)) {
                 return account;
             }
         }
         return null;
     }
+
+    public static JSONObject criaJSONTransferencia(String operacao, String pagadorID, String senhaPagador, String recebedorID, double quantia) {
+		JSONObject my_json = new JSONObject();
+        my_json.put("Operacao", operacao);
+		my_json.put("ID do Pagador", pagadorID);
+		my_json.put("Senha do Pagador", senhaPagador);
+        my_json.put("ID do Recebedor", recebedorID);
+		my_json.put("Quantia", quantia);
+		
+		return my_json;
+	}
 }
 
 
