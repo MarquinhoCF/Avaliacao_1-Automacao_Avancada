@@ -1,10 +1,8 @@
 package io.sim.bank;
 
-import chat.objeto.Mensagem;
-import chat.objeto.Mensagem.Action;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,30 +10,31 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONObject;
+
 public class AccountManipulator extends Thread {
 
-    private static Map<String, Socket> clientesMap = new HashMap<>();
     private Socket socket;
+    private DataInputStream entrada;
+    private DataOutputStream saida;
+    private AlphaBank alphaBank;
 
-    public ThreadServidor(Socket s) {
-        this.socket = s;
+    public AccountManipulator(Socket _socket, AlphaBank _alphaBank) {
+        this.socket = _socket;
+        this.alphaBank = _alphaBank;
     }
 
     @Override
     public void run() {
-        conectar();
-        // cria conta no momento da conexão
-        // passa a conta via socket
-
         boolean sair = false;
         try {
+            entrada = new DataInputStream(socket.getInputStream());
+            saida = new DataOutputStream(socket.getOutputStream());
+            JSONObject accountJSON = new JSONObject((String) entrada.readUTF());
+            alphaBank.conectar(accountJSON.getString("Account ID"), socket);
+            alphaBank.adicionarAccount(accountJSON.getString("Account ID"), accountJSON.getString("Senha"), accountJSON.getLong("Saldo"));
+
             while (!sair) {
-                //Entrada: recebendo mensagem do Cliente
-                ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream());
-                Mensagem mensagem = (Mensagem) entrada.readObject();//Recebendo mensagem do Cliente
-
-                
-
                 Action action = mensagem.getAction();
 
                 switch (action) {

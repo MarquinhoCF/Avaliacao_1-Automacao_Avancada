@@ -14,12 +14,14 @@ import io.sim.company.Company;
 public class AlphaBank extends Thread {
     
     private ServerSocket serverAlphaBank;
-    private static Map<String, Socket> accounts;
+    private static Map<String, Socket> conexoes;
+    private static ArrayList<Account> accounts;
     static int qtdClientes = 0;
 
     public AlphaBank(ServerSocket serverSocket) throws IOException {
         this.serverAlphaBank = serverSocket;
-        accounts = new HashMap<>();
+        conexoes = new HashMap<>();
+        accounts = new ArrayList<Account>();
     }
 
     @Override
@@ -34,9 +36,19 @@ public class AlphaBank extends Thread {
                 AccountManipulator accountManipulator = new AccountManipulator();
                 accountManipulator.start();
             }
+            System.out.println("Encerrando AlphaBank");
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void conectar(String accountID, Socket socket) {
+        conexoes.put(accountID, socket);
+    }
+
+    public void adicionarAccount(String accountID, String senha, long saldo) {
+        Account conta = new Account(accountID, senha, saldo);
+        accounts.add(conta);
     }
 
     public boolean hasAccount(int identifier) {

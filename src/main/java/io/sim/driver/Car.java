@@ -46,6 +46,7 @@ public class Car extends Vehicle implements Runnable {
 	private double speed; //NEWF
 	private Rota rota;
 	private String carStatus;
+	private int distanciaPercorrida; // Em m
 	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
 	private TransportService ts;
 
@@ -95,11 +96,18 @@ public class Car extends Vehicle implements Runnable {
 			System.out.println(this.idCar + " conectado!!");
 
 			while (!terminado) {
+				// Recebndo Rota
 				// Manda "aguardando" da primeira vez
 				saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 				System.out.println(this.idCar + " aguardando rota");
 				rota = (Rota) transfString2Rota(entrada.readUTF());
 				System.out.println(this.idCar + " leu " + rota.getID());
+
+				// Zerando o atributo Distance
+				this.distanciaPercorrida = 0;
+				double latRef = 0;
+				double lonRef = 0;
+
 				ts = new TransportService(true, this.idCar, rota, this, this.sumo);
 				ts.start();
 				System.out.println("CAR - TransportService ativo");
@@ -107,9 +115,17 @@ public class Car extends Vehicle implements Runnable {
 				this.on_off = true;
 				Thread.sleep(this.acquisitionRate);
 
+				boolean initRoute = true;
 				while (this.on_off) {
 					String edgeAtual = (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar));
 					Thread.sleep(this.acquisitionRate);
+					if (initRoute) {
+						double[] coordGeo = calculaCoordGeograficas();
+						latRef = coordGeo[0];
+						lonRef = coordGeo[1];
+						initRoute = false;
+					}
+
 					if(verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " acabou a rota.");
 						this.ts.setOn_off(false);
@@ -118,6 +134,7 @@ public class Car extends Vehicle implements Runnable {
 						this.on_off = false;
 					} else {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
+						atualizaDistanciaPercorrida(latRef, lonRef);
 						atualizaSensores();
 						this.carStatus = "rodando";
 						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
@@ -163,7 +180,7 @@ public class Car extends Vehicle implements Runnable {
 						(String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)),
 						(String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)),
 						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)),
-						(double) this.sumo.do_job_get(Vehicle.getDistance(this.idCar)),
+						getDistanciaPercorrida(),
 
 						(double) this.sumo.do_job_get(Vehicle.getFuelConsumption(this.idCar)),
 						// Vehicle's fuel consumption in ml/s during this time step,
@@ -264,6 +281,7 @@ public class Car extends Vehicle implements Runnable {
 		} else {
 			my_json.put("ID da Rota", "");
 		}
+		my_json.put("Distancia Percorrida", getDistanciaPercorrida());
 		
 		return my_json;
 	}
@@ -298,6 +316,14 @@ public class Car extends Vehicle implements Runnable {
 
 	public String getIdCar() {
 		return this.idCar;
+	}
+
+	public void incrementaDistanciaPercorrida() {
+		distanciaPercorrida++;
+	}
+
+	public int getDistanciaPercorrida() {
+		return distanciaPercorrida;
 	}
 
 	public SumoTraciConnection getSumo() {
@@ -382,5 +408,55 @@ public class Car extends Vehicle implements Runnable {
 		String[] aux = _string.split(",");
 		Rota route = new Rota(aux[0], aux[1]);
 		return route;
+	}
+
+	private double[] calculaCoordGeograficas() throws Exception {
+		SumoPosition2D sumoPosition2D = (SumoPosition2D) sumo.do_job_get(Vehicle.getPosition(this.idCar));
+
+		double x = sumoPosition2D.x; // coordenada X em metros
+		double y = sumoPosition2D.y; // coordenada Y em metros
+
+		double raioTerra = 6371000; // raio médio da Terra em metros
+
+		double latRef = 0;
+		double lonRef = 0;
+
+		// Conversão de metros para graus
+		double lat = latRef + (y / raioTerra) * (180 / Math.PI);
+		double lon = lonRef + (x / raioTerra) * (180 / Math.PI) / Math.cos(latRef * Math.PI / 180);
+
+		double[] coordGeo = new double[] { lat, lon };
+		return coordGeo;
+	}
+
+	private double calculaDistancia(double lat1, double lon1, double lat2, double lon2) {
+		double raioTerra = 6371000;
+	
+		// Diferenças das latitudes e longitudes
+		double diferancaLat = Math.toRadians(lat2 - lat1);
+		double diferancaLon = Math.toRadians(lon2 - lon1);
+	
+		// Fórmula de Haversine
+		double a = Math.sin(diferancaLat / 2) * Math.sin(diferancaLat / 2) +
+				   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+				   Math.sin(diferancaLon / 2) * Math.sin(diferancaLon / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		double distancia = raioTerra * c;
+	
+		return distancia;
+	}
+
+	public void atualizaDistanciaPercorrida(double latInicial, double lonInicial) throws Exception {
+		double[] coordGeo = calculaCoordGeograficas();
+
+		double latAtual = coordGeo[0];
+		double lonAtual = coordGeo[1];
+
+		double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
+
+		System.out.println(idCar + " percorreu " + distancia + "");
+		if (distancia > (distanciaPercorrida + 1000)) {
+			distanciaPercorrida += 1000;
+		}
 	}
 }

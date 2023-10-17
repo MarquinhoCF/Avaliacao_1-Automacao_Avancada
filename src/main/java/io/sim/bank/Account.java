@@ -1,7 +1,6 @@
 package io.sim.bank;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Account extends Thread {
     private String accountID;
@@ -9,9 +8,11 @@ public class Account extends Thread {
     private double saldo;
     private ArrayList<Register> historico;
 
+    //private boolean houveTransacao;
+
     public Account(String _accountID, String _senha, double _saldo) {
         this.accountID = _accountID;
-        this.senha = setSenha(6);
+        this.senha = _senha;
         this.saldo = _saldo;
         this.historico = new ArrayList<Register>();
     }
@@ -23,24 +24,6 @@ public class Account extends Thread {
 
     public String getAccountID() {
         return accountID;
-    }
-
-    private String setSenha(int tamanho) {
-        if (tamanho > 0) {
-            String caracteresPermitidos = "0123456789";
-            Random random = new Random();
-            StringBuilder sb = new StringBuilder(tamanho);
-            
-            // Gerando números aleatórios e anexe-os à string
-            for (int i = 0; i < tamanho; i++) {
-                int index = random.nextInt(caracteresPermitidos.length());
-                char randomNumber = caracteresPermitidos.charAt(index);
-                sb.append(randomNumber);
-            }
-            return sb.toString();
-        } else {
-            return null;
-        }
     }
 
     public String getSenha() {
@@ -55,18 +38,18 @@ public class Account extends Thread {
         this.saldo = _saldo;
     }
 
-    public void deposit(double amount) {
-        if (amount > 0) {
-            balance += amount;
+    public void deposito(double quantia) {
+        if (quantia > 0) {
+            saldo += quantia;
         } else {
             System.out.println("O valor do depósito deve ser positivo.");
         }
     }
 
-    public void withdraw(double amount) {
-        if (amount > 0) {
-            if (balance >= amount) {
-                balance -= amount;
+    public void saque(double quantia) {
+        if (quantia > 0) {
+            if (saldo >= quantia) {
+                saldo -= quantia;
             } else {
                 System.out.println("Saldo insuficiente para efetuar o saque.");
             }

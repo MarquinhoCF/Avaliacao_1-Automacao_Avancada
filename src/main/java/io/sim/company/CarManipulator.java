@@ -35,14 +35,22 @@ public class CarManipulator extends Thread {
     public void run() {
         try {
             String StatusDoCarro = "";
+            double distanciaAnterior = 0;
 
              // loop principal
             while(!StatusDoCarro.equals("encerrado")) {
                 System.out.println("Aguardando mensagem...");
                 JSONObject jsonComunicacao = new JSONObject((String) entrada.readUTF());
                 StatusDoCarro = jsonComunicacao.getString("Status do Carro"); // lê solicitacao do cliente
-
-                // verifica distancia para pagamento
+                
+                double distanciaPercorrida = (double) jsonComunicacao.getLong("Distancia Percorrida");
+                if (distanciaPercorrida > distanciaAnterior) {
+                    // Cria BotPayment
+                    System.out.println("CAR MANIPULATOR CRIOU BOTPAYMENT");
+                    distanciaAnterior = distanciaPercorrida;
+                } else {
+                    distanciaAnterior = distanciaPercorrida;
+                }
                 
                 System.out.println("SMC ouviu " + StatusDoCarro);
                 if (StatusDoCarro.equals("aguardando")) {
