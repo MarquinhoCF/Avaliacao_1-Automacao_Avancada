@@ -13,7 +13,7 @@ public class Account extends Thread {
 
     // Atributos de sincronização
     private Object sincroniza;
-    //private boolean houveTransacao;
+    private boolean houveTransacao;
 
 
     public Account(String _accountID, String _senha, double _saldo) {
@@ -22,11 +22,25 @@ public class Account extends Thread {
         this.saldo = _saldo;
         this.historico = new ArrayList<Register>();
         this.sincroniza = new Object();
+        this.houveTransacao = true;
     }
 
     @Override
     public void run() {
         // Sempre que tiver uma operação withdraw ou deposit criar uma transaction e guardar
+        while (true) {
+            if (houveTransacao) {
+                try {
+                    Thread.sleep(500);
+                    Register register = AlphaBank.pegarRegistro(accountID);
+                    historico.add(register);
+                    houveTransacao = false;
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public String getAccountID() {
@@ -53,6 +67,7 @@ public class Account extends Thread {
                 System.out.println("O valor do depósito deve ser positivo.");
             }
         }
+        houveTransacao = true;
     }
 
     public void saque(double quantia) {
@@ -67,6 +82,7 @@ public class Account extends Thread {
                 System.out.println("O valor do saque deve ser positivo.");
             }
         }
+        houveTransacao = true;
     }
 
     public static Account criaAccount(String accountID, long saldo) {
@@ -84,15 +100,6 @@ public class Account extends Thread {
         Account account = new Account(accountID, senha, saldo);
         return account;
     }
-
-    public static JSONObject criaJSONAccount(Account account) {
-		JSONObject my_json = new JSONObject();
-		my_json.put("Account ID", account.getAccountID());
-		my_json.put("Senha", account.getSenha());
-		my_json.put("Saldo", account.getSaldo());
-		
-		return my_json;
-	}
 }
 
 

@@ -2,6 +2,7 @@ package io.sim.driver;
 
 import io.sim.company.Rota;
 import io.sim.bank.Account;
+import io.sim.bank.AlphaBank;
 import io.sim.company.Company;
 
 import java.io.DataInputStream;
@@ -43,7 +44,6 @@ public class Driver extends Thread {
         this.saldoInicial = 0;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
-        this.account = Account.criaAccount(driverID, saldoInicial);
 
         // pensar na logica de inicializacao do TransporteService e do Car
         // BotPayment payment = new BotPayment(fuelPrice);
@@ -57,7 +57,9 @@ public class Driver extends Thread {
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
             entrada = new DataInputStream(socket.getInputStream());
 			saida = new DataOutputStream(socket.getOutputStream());
-            saida.writeUTF(Account.criaJSONAccount(account).toString());
+            this.account = Account.criaAccount(driverID, saldoInicial);
+            AlphaBank.adicionarAccount(account);
+            account.start();
             System.out.println(driverID + " se conectou ao Servido do AlphaBank!!");
             
             Thread t = new Thread(this.car);
@@ -74,6 +76,7 @@ public class Driver extends Thread {
                     rotaAtual = car.getRota();
                     initRoute = true; 
                 }
+                System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
             car.setTerminado(true);  
             System.out.println("Encerrando " + driverID);

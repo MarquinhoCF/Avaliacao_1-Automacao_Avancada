@@ -47,8 +47,7 @@ public class CarManipulator extends Thread {
                 
                 long distanciaPercorrida = jsonComunicacao.getLong("Distancia Percorrida");
                 if (distanciaPercorrida > distanciaAnterior) {
-                    System.out.println("CAR MANIPULATOR MANDA AS INFORMAÇÕES PARA O ACCOUNT MANIPULATOR");
-                    String driverID = jsonComunicacao.getString("Status do Carro");
+                    String driverID = jsonComunicacao.getString("Driver ID");
                     company.fazerPagamento(driverID);
                     distanciaAnterior = distanciaPercorrida;
                 } else {

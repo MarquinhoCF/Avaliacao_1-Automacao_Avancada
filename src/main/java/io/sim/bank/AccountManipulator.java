@@ -31,9 +31,6 @@ public class AccountManipulator extends Thread {
         try {
             entrada = new DataInputStream(socket.getInputStream());
             saida = new DataOutputStream(socket.getOutputStream());
-            JSONObject accountJSON = new JSONObject((String) entrada.readUTF());
-            alphaBank.conectar(accountJSON.getString("Account ID"), socket);
-            alphaBank.adicionarAccount(accountJSON.getString("Account ID"), accountJSON.getString("Senha"), accountJSON.getLong("Saldo"));
             
             while (!sair) {
                 JSONObject dadosOperacao = new JSONObject((String) entrada.readUTF());
@@ -42,13 +39,19 @@ public class AccountManipulator extends Thread {
                 System.out.println("Leu as informações de Operacao!!");
                 switch (operacao) {
                     case "Transferencia":
-                        System.out.println("TENTA FAZER TRANSFERENCIA");
                         String pagadorID = dadosOperacao.getString("ID do Pagador");
                         String senha = dadosOperacao.getString("Senha do Pagador");
                         if (alphaBank.fazerLogin(pagadorID, senha)) {
-                            System.out.println("ACCOUNT MANIPULATOR CRIA BOTPAYMENT");
-                            System.out.println(dadosOperacao.toString());
-                            // Terminar a lógica!!
+                            String recebedorID = dadosOperacao.getString("ID do Recebedor");
+                            double quantia = dadosOperacao.getDouble("Quantia");
+                            dadosOperacao.getDouble("Quantia");
+                            if (alphaBank.transferencia(pagadorID, recebedorID, quantia)) {
+                                saida.writeUTF(criaRespostaServidor(true).toString());
+                                criarRegistro(true, pagadorID, recebedorID, quantia);
+                                criarRegistro(false, pagadorID, recebedorID, quantia);
+                            } else {
+                                saida.writeUTF(criaRespostaServidor(false).toString());
+                            }
                         } else {
                             System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + pagadorID);
                         }
@@ -65,14 +68,29 @@ public class AccountManipulator extends Thread {
         }
     }
 
-    // public void enviarMensagemReservada(Mensagem mensagem) throws IOException {
-    //     for (Map.Entry<String, Socket> cliente : clientesMap.entrySet()) {
-    //         if (mensagem.getDestinatario().equals(cliente.getKey())) {
-    //             ObjectOutputStream saida = new ObjectOutputStream(cliente.getValue().getOutputStream());
-    //             saida.writeObject(mensagem);
-    //         }
-    //     }
-    // }
+    private JSONObject criaRespostaServidor(boolean sucesso) {
+        JSONObject my_json = new JSONObject();
+        my_json.put("Resposta", sucesso);
+        return my_json;
+    }
+
+    public void criarRegistro(boolean operacao, String pagadorID, String recebedorID, double quantia) throws IOException {
+        Register notificacao = null;
+
+        // operacao = true -> Pagamento
+        if (operacao) {
+            notificacao = new Register(pagadorID, "Pagamento", recebedorID, quantia);
+        } else {
+            notificacao = new Register(recebedorID, "Recebimento", pagadorID, quantia);
+        }
+
+        if (notificacao != null) {
+            alphaBank.adicionaRegistro(notificacao);
+        } else {
+            System.out.println("SAB - Erro na criacao do registro!!");
+        }
+        
+    }
     
 
 }

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
+import io.sim.bank.BotPayment;
 
 public class Company extends Thread {
     // Atributos de Servidor
@@ -56,7 +57,6 @@ public class Company extends Thread {
         // Atributos como cliente de AlphaBank
         alphaBankServerPort = _alphaBankServerPort;
         alphaBankServerHost = _alphaBankServerHost;
-        account = Account.criaAccount("Company", 100000);
     }
 
     @Override
@@ -67,7 +67,9 @@ public class Company extends Thread {
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
             entrada = new DataInputStream(socket.getInputStream());
 			saida = new DataOutputStream(socket.getOutputStream());
-            saida.writeUTF(Account.criaJSONAccount(account).toString());
+            this.account = Account.criaAccount("Company", 100000);
+            AlphaBank.adicionarAccount(account);
+            account.start();
             System.out.println("Company se conectou ao Servido do AlphaBank!!");
 
             while (rotasDisponiveis) {
@@ -102,6 +104,8 @@ public class Company extends Thread {
                     System.out.println("Company: Todos os drivers criados");
                     canectandoCars = false;
                 }
+
+                System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
         }
         catch (IOException e) {
@@ -141,8 +145,7 @@ public class Company extends Thread {
     }
 
     public void fazerPagamento(String driverID) throws IOException {
-        // Ao invés disso deveria chamar o BotPayment!!
-        JSONObject transferencia = AlphaBank.criaJSONTransferencia("Transferencia", account.getAccountID(), account.getSenha(), driverID, this.preco);
-        saida.writeUTF(transferencia.toString());
+        BotPayment bt = new BotPayment(socket, account.getAccountID(),  account.getSenha(), driverID, preco);
+        bt.start();
     }
 }
