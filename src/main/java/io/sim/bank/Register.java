@@ -30,11 +30,14 @@ class Register {
     }
 
     public String getDescricao() {
+        String descricao = "";
         if (operacao.equals("Pagamento")){
-            return usuario + " transferiu R$" + quantia + " para " + usuario2;
-        } else {
-            return usuario + " recebeu R$" + quantia + " de " + usuario2;
+            descricao =  "/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/* " + usuario + " transferiu R$" + quantia + " para " + usuario2;
+        } else if (operacao.equals("Recebimento")) {
+            descricao = "/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/* " + usuario + " recebeu R$" + quantia + " de " + usuario2;
         }
+        
+        return descricao;
     }
     
 }

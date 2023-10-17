@@ -1,15 +1,9 @@
 package io.sim.bank;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.json.JSONObject;
 

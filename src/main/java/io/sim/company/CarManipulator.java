@@ -7,8 +7,6 @@ import java.net.Socket;
 
 import org.json.JSONObject;
 
-import io.sim.bank.AlphaBank;
-
 public class CarManipulator extends Thread {
     private Socket carSocket;
     private DataInputStream entrada;
@@ -78,7 +76,6 @@ public class CarManipulator extends Thread {
             saida.close();
             carSocket.close();
         } catch (IOException e) {
-            //} catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }

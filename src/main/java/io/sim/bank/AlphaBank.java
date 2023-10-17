@@ -1,17 +1,9 @@
 package io.sim.bank;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.json.JSONObject;
-
-import io.sim.company.Company;
 
 public class AlphaBank extends Thread {
     
@@ -34,7 +26,7 @@ public class AlphaBank extends Thread {
     public void run() {
         try {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
-
+            
             while (true) {
                 Socket clientSocket = serverAlphaBank.accept();
                 System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
@@ -47,16 +39,6 @@ public class AlphaBank extends Thread {
             e.printStackTrace();
         }
     }
-
-    // public void conectar(String accountID, Socket socket) {
-    //     synchronized (sincroniza) {
-    //         conexoes.put(accountID, socket);
-    //     }
-    // }
-
-    // public Map<String, Socket> getConexoes() {
-    //     return conexoes;
-    // }
 
     public static void adicionarAccount(Account conta) {
         synchronized (AlphaBank.class) {
@@ -112,14 +94,25 @@ public class AlphaBank extends Thread {
         registrosPendentes.add(register);
     }
 
+    public static int numeroDeRegistrosPend() {
+        synchronized (AlphaBank.class) {
+            if (registrosPendentes != null) {
+                return registrosPendentes.size();
+            }
+            return 0;
+        }
+    }
+
     public static Register pegarRegistro(String accountID) {
         synchronized (AlphaBank.class) {
-            for (int i = 0; i < registrosPendentes.size(); i++) {
-                if (accountID.equals(registrosPendentes.get(i).getUsuario())) {
-                    return registrosPendentes.remove(i);
+            if (registrosPendentes != null) {
+                for (int i = 0; i < registrosPendentes.size(); i++) {
+                    if (accountID.equals(registrosPendentes.get(i).getUsuario())) {
+                        return registrosPendentes.remove(i);
+                    }
                 }
+                System.out.println("Não há registros para esa conta");
             }
-            System.out.println("Não há registros para esa conta");
             return null;
         }
     }

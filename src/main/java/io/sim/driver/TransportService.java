@@ -18,7 +18,7 @@ public class TransportService extends Thread {
 	private Car car; // Veiculo correspondente 
 	private Rota rota; // representa a rota a ser cumprida
 	private SumoStringList edge; // NEWF
-	private boolean terminado; // chamado pelo Auto no caso Car
+	private boolean terminado; // chamado pelo Car
 	private boolean sumoInit;
 	private boolean sumoReady;
 
@@ -59,7 +59,7 @@ public class TransportService extends Thread {
 						}
 
 						try {
-							this.sumo.do_timestep(); // 
+							this.sumo.do_timestep();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

@@ -36,7 +36,7 @@ public class Car extends Vehicle implements Runnable {
 	private String driverID; // id do motorista
 	private SumoTraciConnection sumo;
 	private boolean on_off;
-	private boolean terminado; // chamado pelo Driver
+	private boolean finalizado; // chamado pelo Driver
 	private long acquisitionRate; // taxa de aquisicao de dados dos sensores
 	private int fuelType; 			// 1-diesel, 2-gasoline, 3-ethanol, 4-hybrid
 	private int fuelPreferential; 	// 1-diesel, 2-gasoline, 3-ethanol, 4-hybrid
@@ -45,6 +45,7 @@ public class Car extends Vehicle implements Runnable {
 	private int personNumber;		// the total number of persons which are riding in this vehicle
 	private double speed; //NEWF
 	private Rota rota;
+	private double fuelTank;
 	private String carStatus;
 	private int distanciaPercorrida; // Em m
 	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
@@ -75,12 +76,13 @@ public class Car extends Vehicle implements Runnable {
 			this.fuelPreferential = _fuelPreferential;
 		}
 
-		this.terminado = false;
+		this.finalizado = false;
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
 		this.speed = 50;
 		this.rota = null;
+		this.fuelTank = 10000;
 		this.carStatus = "aguardando";
 		this.drivingRepport = new ArrayList<DrivingData>();
 	}
@@ -88,6 +90,9 @@ public class Car extends Vehicle implements Runnable {
 	@Override
 	public void run() {
 		System.out.println(this.idCar + " iniciando");
+		AtualizaTanque at = new AtualizaTanque(this, 30);
+		at.start();
+
 		try {
             socket = new Socket(this.companyServerHost, this.companyServerPort);
             entrada = new DataInputStream(socket.getInputStream());
@@ -95,7 +100,7 @@ public class Car extends Vehicle implements Runnable {
 
 			System.out.println(this.idCar + " conectado!!");
 
-			while (!terminado) {
+			while (!finalizado) {
 				// Recebndo Rota
 				// Manda "aguardando" da primeira vez
 				saida.writeUTF(criaJSONComunicacao(carStatus).toString());
@@ -110,6 +115,9 @@ public class Car extends Vehicle implements Runnable {
 
 				ts = new TransportService(true, this.idCar, rota, this, this.sumo);
 				ts.start();
+
+				Thread.sleep(200);
+
 				System.out.println("CAR - TransportService ativo");
 				String edgeFinal = this.getEdgeFinal(); 
 				this.on_off = true;
@@ -134,6 +142,7 @@ public class Car extends Vehicle implements Runnable {
 						this.on_off = false;
 					} else {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
+						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
 						atualizaDistanciaPercorrida(latRef, lonRef);
 						atualizaSensores();
 						this.carStatus = "rodando";
@@ -142,11 +151,11 @@ public class Car extends Vehicle implements Runnable {
 				}
 				System.out.println(this.idCar + " off.");
 
-				if(!terminado) {
+				if(!finalizado) {
 					this.carStatus = "aguardando";
 				}
 
-				if(terminado) {
+				if(finalizado) {
 					this.carStatus = "encerrado";
 				}
 			}
@@ -255,7 +264,6 @@ public class Car extends Vehicle implements Runnable {
 				//		"getSpeedDeviation = " + (double) sumo.do_job_get(Vehicle.getSpeedDeviation(this.idCar)));
 				
 				
-				this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 0));
 				this.setSpeed(speed); // NEWF
 
 				
@@ -303,8 +311,12 @@ public class Car extends Vehicle implements Runnable {
 		this.on_off = _on_off;
 	}
 
-	public void setTerminado(boolean _terminado) {
-		this.terminado = _terminado;
+	public boolean getFinalizado() {
+		return finalizado;
+	}
+
+	public void setFinalizado(boolean _finalizado) {
+		this.finalizado = _finalizado;
 	}
 
 	public long getAcquisitionRate() {
@@ -351,6 +363,10 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 	}
 
+	public void gastaCombustivel(double litros) {
+		fuelTank -= litros;
+	}
+
 	public SumoColor getColorCar() {
 		return this.colorCar;
 	}
@@ -377,6 +393,11 @@ public class Car extends Vehicle implements Runnable {
 
 	public void setSpeed(double speed) throws Exception {
 		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
+		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
+	}
+
+	public double getSpeed() throws Exception{
+		return (double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar));
 	}
 
 	// Pega a última posição da Rota

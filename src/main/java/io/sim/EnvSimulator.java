@@ -54,7 +54,7 @@ public class EnvSimulator extends Thread {
 			Thread.sleep(1000);
 
 			ServerSocket companyServer = new ServerSocket(portaCompany);
-			Company company = new Company(companyServer, "data/dados.xml", numDrivers,  portaAlphaBank, host);
+			Company company = new Company(companyServer, "data/dados2.xml", numDrivers,  portaAlphaBank, host);
 			company.start();
 
 			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução

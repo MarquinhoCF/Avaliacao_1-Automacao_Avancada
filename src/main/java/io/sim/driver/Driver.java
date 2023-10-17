@@ -78,7 +78,7 @@ public class Driver extends Thread {
                 }
                 System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
-            car.setTerminado(true);  
+            car.setFinalizado(true);  
             System.out.println("Encerrando " + driverID);
             // this.car.join();
         } catch (IOException e) {

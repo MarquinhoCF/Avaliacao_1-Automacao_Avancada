@@ -1,16 +1,55 @@
 package io.sim.projeto;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.concurrent.Semaphore;
 
+import io.sim.bank.Account;
+import io.sim.bank.AlphaBank;
 import io.sim.driver.Car;
 
 public class FuelStation extends Thread {
+    // Atributos da classe
     private Semaphore bombas;
-    //private AlphaBankClient alphaBankClient;
+    
+    // Atributos como cliente de AlphaBank
+    private Socket socket;
+    private Account account;
+    private int alphaBankServerPort;
+    private String alphaBankServerHost; 
+    private DataInputStream entrada;
+    private DataOutputStream saida;
 
-    public FuelStation() {
+    public FuelStation(int _alphaBankServerPort, String _alphaBankServerHost) {
         this.bombas = new Semaphore(2); // Duas bombas de combustível disponíveis
-        //this.alphaBankClient = alphaBankClient;
+        
+        // Atributos como cliente de AlphaBank
+        alphaBankServerPort = _alphaBankServerPort;
+        alphaBankServerHost = _alphaBankServerHost;
+    }
+
+    @Override
+    public void run() {
+        try {
+            System.out.println("Fuel Station iniciando...");
+
+            socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
+            entrada = new DataInputStream(socket.getInputStream());
+            saida = new DataOutputStream(socket.getOutputStream());
+            this.account = Account.criaAccount("Fuel Station", 0);
+            AlphaBank.adicionarAccount(account);
+            account.start();
+            System.out.println("Company se conectou ao Servido do AlphaBank!!");
+
+            while (true) {
+                
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Encerrando a Fuel Station...");
     }
 
     public void refuelCar(Car car) {
@@ -25,13 +64,6 @@ public class FuelStation extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void run() {
-        // Implemente a lógica para a Fuel Station realizar transações com o AlphaBank
-        // para receber pagamentos dos Drivers.
-        // Você pode usar o alphaBankClient para se comunicar com o AlphaBank.
     }
 }
 
