@@ -54,25 +54,55 @@ public class FuelStation extends Thread {
         System.out.println("Encerrando a Fuel Station...");
     }
 
-    public double abastecerCarro(Car car, double litros) {
-        try {
-            bombas.acquire(); // Tenta adquirir uma bomba de combustível
-            System.out.println("Car " + car.getIdCar() + " está abastecendo no Posto de Gasolina");
-            car.setSpeed(0);
-            Thread.sleep(30000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
-            car.abastecido();
-            System.out.println("Car " + car.getIdCar() + " terminou de abastecer");
-            bombas.release(); // Libera a bomba de combustível
-            return (litros * preco)/1000;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("FS - Erro no abastecimento do " + car.getIdCar());
-        return 0;
-    }
-
     public String getFSAccountID() {
         return this.account.getAccountID();
     }
+
+    public double getPrecoLitro() {
+        return this.preco;
+    }
+
+    public double[] decideQtdLitros(double litros, double saldoDisp) {
+        double precoTotal = litros * preco;
+
+        if (saldoDisp > precoTotal) {
+            double[] info = new double[] { precoTotal, litros*1000 };
+            return info;
+        } else {
+            double precoReduzindo = precoTotal;
+            while (saldoDisp < precoReduzindo) {
+                litros--;
+                precoReduzindo = litros*preco;
+                
+                if (litros <= 0) {
+                    double[] info = new double[] { 0, 0 };
+                    return info;
+                }
+            }
+            double[] info = new double[] { precoReduzindo, litros*1000 };
+            return info;
+        }
+    }
+
+    public void abastecerCarro(Car car, double litros) {
+        try {
+            boolean jaAbasteceu = false;
+            while (!jaAbasteceu) {
+                if (car.getSpeed() == 0) {
+                    bombas.acquire(); // Tenta adquirir uma bomba de combustível
+                    System.out.println(car.getIdCar() + " está abastecendo no Posto de Gasolina");
+                    car.setSpeed(0);
+                    Thread.sleep(30000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
+                    car.abastecido();
+                    System.out.println(car.getIdCar() + " terminou de abastecer");
+                    bombas.release(); // Libera a bomba de combustível
+                    jaAbasteceu = true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 

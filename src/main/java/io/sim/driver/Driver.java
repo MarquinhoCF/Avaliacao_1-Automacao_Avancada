@@ -82,15 +82,24 @@ public class Driver extends Thread {
 
                 if (this.car.getNivelDoTanque() < 7500){
                     //this.car.setSpeed(0);
-                    double litros = this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque();
-                    double preco = postoCombustivel.abastecerCarro(this.car, litros);
-                    BotPayment bt = new BotPayment(socket, this.account.getAccountID(), this.account.getSenha(), postoCombustivel.getFSAccountID(), preco);
-                    bt.start();
-                    try {
-                        this.car.setSpeed(50);
-                    } catch (Exception e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000;
+                    double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo());
+                    double precoAPagar = info[0];
+                    double qtdML = info[1];
+                    if (qtdML != 0) {
+                        try {
+                            System.out.println(driverID + " decidiu abastecer " + qtdML);
+                            this.car.pararCarro();
+                            postoCombustivel.abastecerCarro(this.car, qtdML);
+                            BotPayment bt = new BotPayment(socket, account.getAccountID(), account.getSenha(), postoCombustivel.getFSAccountID(), precoAPagar);
+                            bt.start();
+                            this.car.setSpeed(50);
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.out.println("/////////////////////////////////////// " + driverID + " NÃO TEM DINHEIRO PRA ABASTECER!!");
                     }
                 }
 
