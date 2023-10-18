@@ -44,9 +44,6 @@ public class Driver extends Thread {
         this.saldoInicial = 0;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
-
-        // pensar na logica de inicializacao do TransporteService e do Car
-        // BotPayment payment = new BotPayment(fuelPrice);
     }
 
     @Override
@@ -62,10 +59,10 @@ public class Driver extends Thread {
             account.start();
             System.out.println(driverID + " se conectou ao Servido do AlphaBank!!");
             
-            Thread t = new Thread(this.car);
-            t.start();
+            Thread threadCar = new Thread(this.car);
+            threadCar.start();
 
-            while(Company.temRotasDisponiveis()) {
+            while(threadCar.isAlive()) {
                 Thread.sleep(this.car.getAcquisitionRate());
                 if(car.getCarStatus() == "finalizado") {
                     System.out.println(this.driverID + " rota " + this.rotasDisp.get(0).getID() + " finalizada");

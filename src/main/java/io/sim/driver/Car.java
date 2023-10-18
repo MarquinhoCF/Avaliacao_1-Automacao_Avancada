@@ -17,6 +17,7 @@ import javafx.animation.RotateTransition;
 import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import de.tudresden.sumo.objects.SumoStringList;
+import io.sim.company.Company;
 import io.sim.company.Rota;
 
 /**Define os atributos que coracterizam um Carro.
@@ -80,7 +81,7 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 50;
+		this.speed = 40;
 		this.rota = null;
 		this.fuelTank = 10000;
 		this.carStatus = "aguardando";
@@ -98,14 +99,21 @@ public class Car extends Vehicle implements Runnable {
             entrada = new DataInputStream(socket.getInputStream());
 			saida = new DataOutputStream(socket.getOutputStream());
 
-			System.out.println(this.idCar + " conectado!!");
+			// System.out.println(this.idCar + " conectado!!");
 
 			while (!finalizado) {
 				// Recebndo Rota
 				// Manda "aguardando" da primeira vez
 				saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 				System.out.println(this.idCar + " aguardando rota");
-				rota = (Rota) transfString2Rota(entrada.readUTF());
+				rota = criaRotaDeJSON(new JSONObject((String) entrada.readUTF()));
+
+				if(rota.getID().equals("-1")) {
+					System.out.println(this.idCar +" - Sem rotas a receber.");
+					finalizado = true;
+					break;
+				}
+
 				System.out.println(this.idCar + " leu " + rota.getID());
 
 				// Zerando o atributo Distance
@@ -115,18 +123,20 @@ public class Car extends Vehicle implements Runnable {
 
 				ts = new TransportService(true, this.idCar, rota, this, this.sumo);
 				ts.start();
-
-				Thread.sleep(200);
-
 				System.out.println("CAR - TransportService ativo");
+
+				//Thread.sleep(200);
+
 				String edgeFinal = this.getEdgeFinal(); 
 				this.on_off = true;
-				Thread.sleep(this.acquisitionRate);
+				while(!Company.estaNoSUMO(this.idCar, this.sumo)) {
+					Thread.sleep(this.acquisitionRate);
+				}
+				String edgeAtual = (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar));
 
 				boolean initRoute = true;
 				while (this.on_off) {
-					String edgeAtual = (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar));
-					Thread.sleep(this.acquisitionRate);
+					// Thread.sleep(this.acquisitionRate);
 					if (initRoute) {
 						double[] coordGeo = calculaCoordGeograficas();
 						latRef = coordGeo[0];
@@ -136,17 +146,28 @@ public class Car extends Vehicle implements Runnable {
 
 					if(verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " acabou a rota.");
-						this.ts.setOn_off(false);
+						//this.ts.setOn_off(false);
 						this.carStatus = "finalizado";
 						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
 						this.on_off = false;
-					} else {
+						break;
+					} 
+
+					Thread.sleep(this.acquisitionRate);
+					
+					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
 						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
-						atualizaDistanciaPercorrida(latRef, lonRef);
-						atualizaSensores();
+						atualizaSensores(); // BOZASSO AQUI
 						this.carStatus = "rodando";
 						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
+						
+						if(this.carStatus.equals("finalizado")) {
+							this.on_off = false;
+							break;
+						} else {
+							edgeAtual = (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar));
+						}
 					}
 				}
 				System.out.println(this.idCar + " off.");
@@ -425,11 +446,9 @@ public class Car extends Vehicle implements Runnable {
 		}
 	}
 
-	// Transforma uma String em uma Rota
-	private Rota transfString2Rota(String _string) {
-		String[] aux = _string.split(",");
-		Rota route = new Rota(aux[0], aux[1]);
-		return route;
+	private Rota criaRotaDeJSON(JSONObject rotaJSON) {
+		Rota rota = new Rota(rotaJSON.getString("ID da Rota"), rotaJSON.getString("Edges"));
+        return rota;
 	}
 
 	private double[] calculaCoordGeograficas() throws Exception {
@@ -477,8 +496,8 @@ public class Car extends Vehicle implements Runnable {
 		double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
 
 		System.out.println(idCar + " percorreu " + distancia + " metros");
-		if (distancia > (distanciaPercorrida + 100)) {
-			distanciaPercorrida += 100;
+		if (distancia > (distanciaPercorrida + 1000)) {
+			distanciaPercorrida += 1000;
 		}
 	}
 }

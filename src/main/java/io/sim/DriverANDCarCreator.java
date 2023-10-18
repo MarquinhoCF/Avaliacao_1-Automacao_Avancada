@@ -20,7 +20,7 @@ public class DriverANDCarCreator {
 
             Driver driver = new Driver(driverID, car, taxaAquisicao, portaAlphaBank, host);
             drivers.add(driver);
-            driver.start();
+            //driver.start();
         }
 
         return drivers;

@@ -20,6 +20,7 @@ public class EnvSimulator extends Thread {
 	private static int portaAlphaBank;
 	private static long taxaAquisicao;
 	private static int numDrivers;
+	private static String rotasXML;
 
     public EnvSimulator() {
 		/* SUMO */
@@ -34,7 +35,8 @@ public class EnvSimulator extends Thread {
 		portaCompany = 23415;
 		portaAlphaBank = 54321;
 		taxaAquisicao = 500;
-		numDrivers = 1;
+		numDrivers = 100;
+		rotasXML = "data/dados.xml";
 	}
 
     public void run() {
@@ -46,19 +48,25 @@ public class EnvSimulator extends Thread {
 			sumo.runServer(portaSUMO); // porta servidor SUMO
 			System.out.println("SUMO conectado.");
 			Thread.sleep(5000);
+			ExecutaSimulador execSimulador = new ExecutaSimulador(this.sumo, taxaAquisicao);
+			execSimulador.start();
 
 			ServerSocket alphaBankServer = new ServerSocket(portaAlphaBank);
 			AlphaBank alphaBank = new AlphaBank(alphaBankServer);
 			alphaBank.start();
 
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 
 			ServerSocket companyServer = new ServerSocket(portaCompany);
-			Company company = new Company(companyServer, "data/dados2.xml", numDrivers,  portaAlphaBank, host);
+			Company company = new Company(companyServer, rotasXML, numDrivers,  portaAlphaBank, host);
 			company.start();
 
 			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução
 			ArrayList<Driver> drivers = DriverANDCarCreator.criaListaDrivers(numDrivers, taxaAquisicao, sumo, host, portaCompany, portaAlphaBank);
+			for(int i = 0; i < drivers.size(); i++) {
+				drivers.get(i).start();
+				Thread.sleep(500);
+			}
 			for(int i = 0; i < drivers.size(); i++) {
 				drivers.get(i).join();
 			}

@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import it.polito.appeal.traci.SumoTraciConnection;
+import de.tudresden.sumo.cmd.Vehicle;
+import de.tudresden.sumo.objects.SumoStringList;
 
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
@@ -16,8 +19,8 @@ public class Company extends Thread {
     private ServerSocket serverSocket;
 
     // Atributos para sincronização
-    private Object sincroniza = new Object();
-    private static boolean rotasDisponiveis = true;
+    private static Object sincroniza;
+    private static boolean rotasDisponiveis;
     private boolean canectandoCars;
 
     // Atributos da classe
@@ -40,7 +43,7 @@ public class Company extends Thread {
         this.serverSocket = serverSocket;
 
         // Inicializa atributos de sincronização
-        this.sincroniza = new Object();
+        sincroniza = new Object();
         rotasDisponiveis = true;
         this.canectandoCars = true;
 
@@ -116,11 +119,19 @@ public class Company extends Thread {
         return rotasDisponiveis;
     }
 
-    public String transfRota2String(Rota _route) {
-        String stringRota;
-        stringRota = _route.getID() + "," + _route.getEdges();
-        return stringRota;
-    }
+    public static boolean estaNoSUMO(String _idCar, SumoTraciConnection _sumo) {
+        synchronized(sincroniza){
+            try {
+                SumoStringList lista;
+                lista = (SumoStringList) _sumo.do_job_get(Vehicle.getIDList());
+                return lista.contains(_idCar);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return false;
+            }
+        }
+	}
 
     // Libera uma rota para o cliente que a solicitou. Para isso, remove de "rotasDisp" e adiciona em "rotasEmExec"
     public Rota executarRota() {

@@ -20,7 +20,7 @@ public class TransportService extends Thread {
 	private SumoStringList edge; // NEWF
 	private boolean terminado; // chamado pelo Car
 	private boolean sumoInit;
-	private boolean sumoReady;
+	// private boolean sumoReady;
 
 	public TransportService(boolean _on_off, String _idTransportService, Rota _route, Car _car, SumoTraciConnection _sumo) {
 		this.on_off = _on_off;
@@ -30,49 +30,62 @@ public class TransportService extends Thread {
 		this.sumo = _sumo;
 		this.terminado = false;
 		this.sumoInit = false;
-		this.sumoReady = false;
+		// this.sumoReady = false;
 	}
 
 	@Override
 	public void run() {
 		System.out.println("Iniciando TransportService");
 		
-		// Loop principal
-		while(!terminado) {
-			try {
-				if(this.on_off) {
-					System.out.println("TS - on");
-					while (this.on_off) {
-						if(!this.sumoInit) {
-							System.out.println("TS - entrou na criacao");
-							this.initializeRoutes();
-							System.out.println("TS - Rota: " + edge + " adcionada!");
-							String edgeFinal = edge.get(edge.size()-1);
-							System.out.println("TS - Edge final: "+edgeFinal);
-							
-						}
-
-						if (this.getSumo().isClosed()) {
-							this.on_off = false;
-							this.sumoReady = false;
-							System.out.println("TS - SUMO is closed...");
-						}
-
-						try {
-							this.sumo.do_timestep();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						Thread.sleep(this.car.getAcquisitionRate());
-					}
-					sumoInit = false;
-					sumoReady = false;
-				}
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		System.out.println("Iniciando TransportService - " + this.car.getIdCar());
+		this.initializeRoutes();
+		System.out.println(this.car.getIdCar() + " - TS - Rota: " + edge + " adcionada!");
+		String edgeFinal = edge.get(edge.size()-1);
+		System.out.println(this.car.getIdCar() + " - TS - Edge final: " + edgeFinal);
+		System.out.println(this.car.getIdCar() + " - TS - on");
+		try {
+			sleep(this.car.getAcquisitionRate());
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
+		// // Loop principal
+		// while(!terminado) {
+		// 	try {
+		// 		if(this.on_off) {
+		// 			System.out.println("TS - on");
+		// 			while (this.on_off) {
+		// 				if(!this.sumoInit) {
+		// 					System.out.println("TS - entrou na criacao");
+		// 					this.initializeRoutes();
+		// 					System.out.println("TS - Rota: " + edge + " adcionada!");
+		// 					String edgeFinal = edge.get(edge.size()-1);
+		// 					System.out.println("TS - Edge final: "+edgeFinal);
+							
+		// 				}
+
+		// 				if (this.getSumo().isClosed()) {
+		// 					this.on_off = false;
+		// 					this.sumoReady = false;
+		// 					System.out.println("TS - SUMO is closed...");
+		// 				}
+
+		// 				try {
+		// 					this.sumo.do_timestep();
+		// 				} catch (Exception e) {
+		// 					e.printStackTrace();
+		// 				}
+		// 				Thread.sleep(this.car.getAcquisitionRate());
+		// 			}
+		// 			sumoInit = false;
+		// 			sumoReady = false;
+		// 		}
+
+		// 	} catch (Exception e) {
+		// 		e.printStackTrace();
+		// 	}
+		// }
 
 		System.out.println("Encerrando TransportService.");
 	}
@@ -84,8 +97,7 @@ public class TransportService extends Thread {
 		edge.clear();
 		String aux = this.rota.getEdges();
 
-		for(String e : aux.split(" "))
-		{
+		for(String e : aux.split(" ")) {
 			edge.add(e);
 		}
 
@@ -95,7 +107,6 @@ public class TransportService extends Thread {
 			//sumo.do_job_set(Vehicle.add(this.auto.getIdAuto(), "DEFAULT_VEHTYPE", this.itinerary.getIdItinerary(), 0,
 			//		0.0, 0, (byte) 0));
 			
-			// MUDARF com Car herdando Vehicle, esse passo pode se tornar obsoleto
 			sumo.do_job_set(Vehicle.addFull(this.car.getIdCar(), 				//vehID
 											this.rota.getID(), 					//carID
 											"DEFAULT_VEHTYPE", 					//typeID 
@@ -119,7 +130,7 @@ public class TransportService extends Thread {
 			e1.printStackTrace();
 		}
 		this.sumoInit = true;
-		this.sumoReady = true;
+		// this.sumoReady = true;
 	}
 
 	public boolean isOn_off() {
@@ -154,8 +165,8 @@ public class TransportService extends Thread {
 		this.rota = _rota;
 	}
 
-	public boolean isSumoReady() {
-		return sumoReady;
-	}
+	// public boolean isSumoReady() {
+	// 	return sumoReady;
+	// }
 
 }

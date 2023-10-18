@@ -39,7 +39,7 @@ public class CarManipulator extends Thread {
 
              // loop principal
             while(!StatusDoCarro.equals("encerrado")) {
-                System.out.println("Aguardando mensagem...");
+                // System.out.println("Aguardando mensagem...");
                 JSONObject jsonComunicacao = new JSONObject((String) entrada.readUTF());
                 StatusDoCarro = jsonComunicacao.getString("Status do Carro"); // lê solicitacao do cliente
                 
@@ -52,18 +52,25 @@ public class CarManipulator extends Thread {
                     distanciaAnterior = distanciaPercorrida;
                 }
                 
-                System.out.println("SMC ouviu " + StatusDoCarro);
                 if (StatusDoCarro.equals("aguardando")) {
-                    synchronized (sincroniza) {
-                        Rota resposta = company.executarRota();
-                        
-                        System.out.println("SMC - Liberando rota:\n" + resposta.getID());
-                        saida.writeUTF(company.transfRota2String(resposta));
+                    if(!Company.temRotasDisponiveis()) {
+                        System.out.println("SMC - Sem mais rotas para liberar.");
+                        Rota rota = new Rota("-1", "00000");
+                        saida.writeUTF(criaJSONRota(rota).toString());
+                        break;
+                    }
+
+                    if(Company.temRotasDisponiveis()) {
+                        synchronized (sincroniza) {
+                            Rota resposta = company.executarRota();
+                            saida.writeUTF(criaJSONRota(resposta).toString());
+                        }
                     }
                 } else if(StatusDoCarro.equals("finalizado")) {
                     String routeID = jsonComunicacao.getString("ID da Rota");
                     System.out.println("SMC - Rota " + routeID + " finalizada.");
-                    this.company.terminarRota(routeID);
+                    company.terminarRota(routeID);
+                    System.out.println("Aguardando mensagem...");
                 } else if(StatusDoCarro.equals("rodando")) {
                     // a principio, nao faz nada
                 } else if (StatusDoCarro.equals("encerrado")) {
@@ -80,5 +87,11 @@ public class CarManipulator extends Thread {
         }
     }
 
+    public JSONObject criaJSONRota(Rota rota) {
+        JSONObject rotaJSON = new JSONObject();
+        rotaJSON.put("ID da Rota", rota.getID());
+        rotaJSON.put("Edges", rota.getEdges());
+        return rotaJSON;
+    }
     
 }
