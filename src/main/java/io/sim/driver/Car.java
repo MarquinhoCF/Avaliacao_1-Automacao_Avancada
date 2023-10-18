@@ -47,6 +47,7 @@ public class Car extends Vehicle implements Runnable {
 	private double speed; //NEWF
 	private Rota rota;
 	private double fuelTank;
+	private double maxFuelCapacity;
 	private String carStatus;
 	private int distanciaPercorrida; // Em m
 	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
@@ -81,9 +82,10 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 40;
+		this.speed = 50;
 		this.rota = null;
 		this.fuelTank = 10000;
+		this.maxFuelCapacity = 55000;
 		this.carStatus = "aguardando";
 		this.drivingRepport = new ArrayList<DrivingData>();
 	}
@@ -91,7 +93,7 @@ public class Car extends Vehicle implements Runnable {
 	@Override
 	public void run() {
 		System.out.println(this.idCar + " iniciando");
-		AtualizaTanque at = new AtualizaTanque(this, 30);
+		AtualizaTanque at = new AtualizaTanque(this, 100);
 		at.start();
 
 		try {
@@ -158,6 +160,7 @@ public class Car extends Vehicle implements Runnable {
 					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
 						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
+						atualizaDistanciaPercorrida(latRef, lonRef);
 						atualizaSensores(); // BOZASSO AQUI
 						this.carStatus = "rodando";
 						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
@@ -285,7 +288,7 @@ public class Car extends Vehicle implements Runnable {
 				//		"getSpeedDeviation = " + (double) sumo.do_job_get(Vehicle.getSpeedDeviation(this.idCar)));
 				
 				
-				this.setSpeed(speed); // NEWF
+				//this.setSpeed(speed); // ATENÇÃOOOOOOOOOO PRA ISSO AQUI
 
 				
 				// System.out.println("getPersonNumber = " + sumo.do_job_get(Vehicle.getPersonNumber(this.idCar)));
@@ -385,7 +388,29 @@ public class Car extends Vehicle implements Runnable {
 	}
 
 	public void gastaCombustivel(double litros) {
-		fuelTank -= litros;
+		if (fuelTank >= litros) {
+			fuelTank -= litros;
+		} else {
+			try {
+				pararCarro();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	public double getNivelDoTanque() {
+		return this.fuelTank;
+	}
+
+	public double getCapacidadeDoTanque() {
+		return this.maxFuelCapacity;
+	}
+
+	public void abastecido() {
+		fuelTank = maxFuelCapacity;
 	}
 
 	public SumoColor getColorCar() {
@@ -419,6 +444,11 @@ public class Car extends Vehicle implements Runnable {
 
 	public double getSpeed() throws Exception{
 		return (double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar));
+	}
+
+	public void pararCarro() throws Exception{
+		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 0));
+		sumo.do_job_set(Vehicle.setSpeed(this.idCar, 0));
 	}
 
 	// Pega a última posição da Rota

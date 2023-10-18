@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 
 import io.sim.driver.Driver;
+import io.sim.projeto.FuelStation;
 import io.sim.bank.AlphaBank;
 import io.sim.company.Company;
 import it.polito.appeal.traci.SumoTraciConnection;
@@ -35,7 +36,7 @@ public class EnvSimulator extends Thread {
 		portaCompany = 23415;
 		portaAlphaBank = 54321;
 		taxaAquisicao = 500;
-		numDrivers = 100;
+		numDrivers = 1;
 		rotasXML = "data/dados.xml";
 	}
 
@@ -57,12 +58,15 @@ public class EnvSimulator extends Thread {
 
 			Thread.sleep(2000);
 
+			FuelStation fuelStation = new FuelStation(portaAlphaBank, host);
+			fuelStation.start();
+
 			ServerSocket companyServer = new ServerSocket(portaCompany);
 			Company company = new Company(companyServer, rotasXML, numDrivers,  portaAlphaBank, host);
 			company.start();
 
 			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução
-			ArrayList<Driver> drivers = DriverANDCarCreator.criaListaDrivers(numDrivers, taxaAquisicao, sumo, host, portaCompany, portaAlphaBank);
+			ArrayList<Driver> drivers = DriverANDCarCreator.criaListaDrivers(numDrivers, fuelStation, taxaAquisicao, sumo, host, portaCompany, portaAlphaBank);
 			for(int i = 0; i < drivers.size(); i++) {
 				drivers.get(i).start();
 				Thread.sleep(500);

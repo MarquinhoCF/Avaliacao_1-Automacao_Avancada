@@ -1,8 +1,10 @@
 package io.sim.driver;
 
 import io.sim.company.Rota;
+import io.sim.projeto.FuelStation;
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
+import io.sim.bank.BotPayment;
 import io.sim.company.Company;
 
 import java.io.DataInputStream;
@@ -34,16 +36,19 @@ public class Driver extends Thread {
     private boolean initRoute = false;
     private long saldoInicial;
 
-    public Driver(String _driverID, Car _car, long _taxaAquisicao, int _alphaBankServerPort, String _alphaBankServerHost) {
+    private FuelStation postoCombustivel;
+
+    public Driver(String _driverID, Car _car, long _taxaAquisicao, FuelStation _postoCombustivel, int _alphaBankServerPort, String _alphaBankServerHost) {
         this.driverID = _driverID;
         this.car = _car;
         this.taxaAquisicao = _taxaAquisicao;
         this.rotasDisp = new ArrayList<Rota>();
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
-        this.saldoInicial = 0;
+        this.saldoInicial = 10000;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
+        this.postoCombustivel = _postoCombustivel;
     }
 
     @Override
@@ -64,6 +69,7 @@ public class Driver extends Thread {
 
             while(threadCar.isAlive()) {
                 Thread.sleep(this.car.getAcquisitionRate());
+                
                 if(car.getCarStatus() == "finalizado") {
                     System.out.println(this.driverID + " rota " + this.rotasDisp.get(0).getID() + " finalizada");
                     rotasTerminadas.add(rotaAtual);
@@ -73,6 +79,21 @@ public class Driver extends Thread {
                     rotaAtual = car.getRota();
                     initRoute = true; 
                 }
+
+                if (this.car.getNivelDoTanque() < 7500){
+                    //this.car.setSpeed(0);
+                    double litros = this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque();
+                    double preco = postoCombustivel.abastecerCarro(this.car, litros);
+                    BotPayment bt = new BotPayment(socket, this.account.getAccountID(), this.account.getSenha(), postoCombustivel.getFSAccountID(), preco);
+                    bt.start();
+                    try {
+                        this.car.setSpeed(50);
+                    } catch (Exception e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+
                 System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
             car.setFinalizado(true);  

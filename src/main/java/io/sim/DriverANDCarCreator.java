@@ -2,6 +2,7 @@ package io.sim;
 
 import io.sim.driver.Car;
 import io.sim.driver.Driver;
+import io.sim.projeto.FuelStation;
 import it.polito.appeal.traci.SumoTraciConnection;
 
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import java.util.Random;
 import de.tudresden.sumo.objects.SumoColor;
 
 public class DriverANDCarCreator {
-    public static ArrayList<Driver> criaListaDrivers(int qtdDrivers, long taxaAquisicao, SumoTraciConnection sumo, String host, int portaCompanny, int portaAlphaBank) {
+    public static ArrayList<Driver> criaListaDrivers(int qtdDrivers, FuelStation fuelStation, long taxaAquisicao, SumoTraciConnection sumo, String host, int portaCompanny, int portaAlphaBank) {
         ArrayList<Driver> drivers = new ArrayList<>();
 
         for (int i = 0; i < qtdDrivers; i++) {
@@ -18,7 +19,7 @@ public class DriverANDCarCreator {
             String carID = "Car " + (i + 1);
             Car car = createCar(carID, driverID, taxaAquisicao, sumo, host, portaCompanny);
 
-            Driver driver = new Driver(driverID, car, taxaAquisicao, portaAlphaBank, host);
+            Driver driver = new Driver(driverID, car, taxaAquisicao, fuelStation, portaAlphaBank, host);
             drivers.add(driver);
             //driver.start();
         }

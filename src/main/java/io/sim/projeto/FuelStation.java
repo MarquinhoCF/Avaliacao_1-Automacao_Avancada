@@ -13,6 +13,7 @@ import io.sim.driver.Car;
 public class FuelStation extends Thread {
     // Atributos da classe
     private Semaphore bombas;
+    private double preco;
     
     // Atributos como cliente de AlphaBank
     private Socket socket;
@@ -24,6 +25,7 @@ public class FuelStation extends Thread {
 
     public FuelStation(int _alphaBankServerPort, String _alphaBankServerHost) {
         this.bombas = new Semaphore(2); // Duas bombas de combustível disponíveis
+        this.preco = 5.87;
         
         // Atributos como cliente de AlphaBank
         alphaBankServerPort = _alphaBankServerPort;
@@ -41,7 +43,7 @@ public class FuelStation extends Thread {
             this.account = Account.criaAccount("Fuel Station", 0);
             AlphaBank.adicionarAccount(account);
             account.start();
-            System.out.println("Company se conectou ao Servido do AlphaBank!!");
+            System.out.println("Fuel Station se conectou ao Servido do AlphaBank!!");
 
             while (true) {
                 
@@ -52,18 +54,25 @@ public class FuelStation extends Thread {
         System.out.println("Encerrando a Fuel Station...");
     }
 
-    public void refuelCar(Car car) {
+    public double abastecerCarro(Car car, double litros) {
         try {
             bombas.acquire(); // Tenta adquirir uma bomba de combustível
             System.out.println("Car " + car.getIdCar() + " está abastecendo no Posto de Gasolina");
-            car.abastecendo();
-            Thread.sleep(120000); // Tempo de abastecimento de 2 minutos (em milissegundos)
+            car.setSpeed(0);
+            Thread.sleep(30000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
             car.abastecido();
             System.out.println("Car " + car.getIdCar() + " terminou de abastecer");
             bombas.release(); // Libera a bomba de combustível
-        } catch (InterruptedException e) {
+            return (litros * preco)/1000;
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("FS - Erro no abastecimento do " + car.getIdCar());
+        return 0;
+    }
+
+    public String getFSAccountID() {
+        return this.account.getAccountID();
     }
 }
 

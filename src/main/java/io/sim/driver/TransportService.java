@@ -125,6 +125,7 @@ public class TransportService extends Thread {
 					);
 			
 			sumo.do_job_set(Vehicle.setColor(this.car.getIdCar(), this.car.getColorCar()));
+			this.car.setSpeed(50);
 			
 		} catch (Exception e1) {
 			e1.printStackTrace();
