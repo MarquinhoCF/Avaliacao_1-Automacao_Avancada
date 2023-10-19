@@ -91,7 +91,6 @@ public class FuelStation extends Thread {
                 if (car.getSpeed() == 0) {
                     bombas.acquire(); // Tenta adquirir uma bomba de combustível
                     System.out.println(car.getIdCar() + " está abastecendo no Posto de Gasolina");
-                    car.setSpeed(0);
                     Thread.sleep(30000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
                     car.abastecido();
                     System.out.println(car.getIdCar() + " terminou de abastecer");

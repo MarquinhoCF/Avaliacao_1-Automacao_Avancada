@@ -35,8 +35,6 @@ public class TransportService extends Thread {
 
 	@Override
 	public void run() {
-		System.out.println("Iniciando TransportService");
-		
 		System.out.println("Iniciando TransportService - " + this.car.getIdCar());
 		this.initializeRoutes();
 		System.out.println(this.car.getIdCar() + " - TS - Rota: " + edge + " adcionada!");
@@ -46,7 +44,6 @@ public class TransportService extends Thread {
 		try {
 			sleep(this.car.getAcquisitionRate());
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -125,7 +122,9 @@ public class TransportService extends Thread {
 					);
 			
 			sumo.do_job_set(Vehicle.setColor(this.car.getIdCar(), this.car.getColorCar()));
-			this.car.setSpeed(50);
+			
+			this.sumo.do_job_set(Vehicle.setSpeed(this.car.getIdCar(), 50));
+			this.sumo.do_job_set(Vehicle.setSpeedMode(this.car.getIdCar(), 31));
 			
 		} catch (Exception e1) {
 			e1.printStackTrace();

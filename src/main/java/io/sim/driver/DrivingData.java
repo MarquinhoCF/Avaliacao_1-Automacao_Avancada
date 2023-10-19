@@ -9,10 +9,18 @@ package io.sim.driver;
 //public class DrivingData implements Serializable{
 public class DrivingData {
 
-	/* SUMO's data */
-
-	private String autoID;
+		/* Informações adicionais para lógica de tratamento de rotas */
+	
+	private String carID;
 	private String driverID;
+	private String carStatus;
+	private double latInicial;
+	private double lonInicial;
+	private double latAtual;
+	private double lonAtual;
+
+		/* SUMO's data */
+
 	private long timeStamp; 			// System.currentTimeMillis()
 	private double x_Position; 			// sumoPosition2D (x)
 	private double y_Position; 			// sumoPosition2D (y)
@@ -141,13 +149,20 @@ public class DrivingData {
 	//private double k1; // Driver Score for Fuel Usage (%)
 
 	public DrivingData(
-			String _autoID, String _driverID, long _timeStamp, double _x_Position, double _y_Position,
+			String _carID, String _driverID, String _carStatus, double _latInicial, double _lonInicial, 
+			double _latAtual, double _lonAtual, long _timeStamp, double _x_Position, double _y_Position,
 			String _roadIDSUMO, String _routeIDSUMO, double _speed, double _odometer, double _fuelConsumption,
 			double _averageFuelConsumption, int _fuelType, double _fuelPrice, double _co2Emission, 
 			double _HCEmission, int _personCapacity, int _personNumber) {
+		
+		this.carID = _carID;
+		this.driverID = _driverID;
+		this.carStatus = _carStatus;
+		this.latInicial = _latInicial;
+		this.lonInicial = _lonInicial;
+		this.latAtual = _latAtual;
+		this.lonAtual = _lonAtual;
 
-		this.autoID = _autoID;
-		this.driverID = _autoID;
 		this.timeStamp = _timeStamp;
 		this.x_Position = _x_Position;
 		this.y_Position = _y_Position;
@@ -165,6 +180,36 @@ public class DrivingData {
 		this.personNumber = _personNumber;
 
 	}
+
+	public String getCarID() {
+		return this.carID;
+	}
+
+	public String getDriverID() {
+		return this.driverID;
+	}
+
+	public String getCarStatus() {
+		return this.carStatus;
+	}
+
+	public double getLatInicial() {
+		return this.latInicial;
+	}
+
+	public double getLonInicial() {
+		return this.lonInicial;
+	}
+
+	public double getLatAtual() {
+		return this.latAtual;
+	}
+	public double getLonAtual() {
+		return this.lonAtual;
+	}
+
+
+	/* SUMO's data getters e setters */
 
 	public double getSpeed() {
 		return this.speed;
@@ -200,14 +245,6 @@ public class DrivingData {
 
 	public String getRouteIDSUMO() {
 		return this.routeIDSUMO;
-	}
-
-	public String getAutoID() {
-		return this.autoID;
-	}
-
-	public String getDriverID() {
-		return this.driverID;
 	}
 
 	public double getHCEmission() {

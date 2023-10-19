@@ -7,7 +7,7 @@ public class Account extends Thread {
     private String accountID;
     private String senha;
     private double saldo;
-    private ArrayList<Register> historico;
+    private ArrayList<TransferData> historico;
 
     // Atributos de sincronização
     private Object sincroniza;
@@ -16,7 +16,7 @@ public class Account extends Thread {
         this.accountID = _accountID;
         this.senha = _senha;
         this.saldo = _saldo;
-        this.historico = new ArrayList<Register>();
+        this.historico = new ArrayList<TransferData>();
         this.sincroniza = new Object();
     }
 
@@ -28,14 +28,14 @@ public class Account extends Thread {
             while (true) {
                 if (AlphaBank.numeroDeRegistrosPend() != 0) {
                     Thread.sleep(500);
-                    Register register = AlphaBank.pegarRegistro(accountID);
-                    historico.add(register);
-                    System.out.println("TEVE TRANSAÇÃO");
-                    System.out.println(register.getDescricao());
+                    TransferData register = AlphaBank.pegarRegistro(accountID);
+                    if (register != null) {
+                        historico.add(register);
+                        System.out.println(register.getDescricao());
+                    }
                 }
             }
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
                 e.printStackTrace();
         }
     }

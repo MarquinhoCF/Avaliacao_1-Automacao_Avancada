@@ -9,7 +9,7 @@ public class AlphaBank extends Thread {
     
     private ServerSocket serverAlphaBank;
     private static ArrayList<Account> accounts;
-    private static ArrayList<Register> registrosPendentes;
+    private static ArrayList<TransferData> registrosPendentes;
     static int qtdClientes = 0;
 
     // Atributo de sincronização
@@ -18,7 +18,7 @@ public class AlphaBank extends Thread {
     public AlphaBank(ServerSocket serverSocket) throws IOException {
         this.serverAlphaBank = serverSocket;
         accounts = new ArrayList<Account>();
-        registrosPendentes = new ArrayList<Register>();
+        registrosPendentes = new ArrayList<TransferData>();
         this.sincroniza = new Object();
     }
 
@@ -50,7 +50,10 @@ public class AlphaBank extends Thread {
         }
     }
 
-    public boolean fazerLogin(String accountID, String senha) {
+    public boolean fazerLogin(String[] login) {
+        String accountID = login[0];
+        String senha = login[1];
+
         for (Account account : accounts) {
             if (account.getAccountID().equals(accountID)) {
                 if (account.getSenha().equals(senha)) {
@@ -90,8 +93,14 @@ public class AlphaBank extends Thread {
         return null;
     }
 
-    public void adicionaRegistro(Register register) {
-        registrosPendentes.add(register);
+    public void adicionaRegistros(TransferData registerPag) {
+        registerPag.setTimestamp();
+        registerPag.setAccountID(registerPag.getPagador());
+        registrosPendentes.add(registerPag);
+        TransferData registerReceb = new TransferData(registerPag.getPagador(), "Recebimento", registerPag.getRecebedor(), registerPag.getQuantia());
+        registerReceb.setTimestamp();
+        registerReceb.setAccountID(registerPag.getRecebedor());
+        registrosPendentes.add(registerReceb);
     }
 
     public static int numeroDeRegistrosPend() {
@@ -103,11 +112,11 @@ public class AlphaBank extends Thread {
         }
     }
 
-    public static Register pegarRegistro(String accountID) {
+    public static TransferData pegarRegistro(String accountID) {
         synchronized (AlphaBank.class) {
             if (registrosPendentes != null) {
                 for (int i = 0; i < registrosPendentes.size(); i++) {
-                    if (accountID.equals(registrosPendentes.get(i).getUsuario())) {
+                    if (accountID.equals(registrosPendentes.get(i).getAccountID())) {
                         return registrosPendentes.remove(i);
                     }
                 }

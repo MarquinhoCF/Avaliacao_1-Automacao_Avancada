@@ -12,10 +12,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Random;
-
-import org.json.JSONObject;
-
 
 public class Driver extends Thread {
     // Cliente de AlphaBank
@@ -89,11 +85,10 @@ public class Driver extends Thread {
                     if (qtdML != 0) {
                         try {
                             System.out.println(driverID + " decidiu abastecer " + qtdML);
-                            this.car.pararCarro();
+                            this.car.preparaAbastecimento();
                             postoCombustivel.abastecerCarro(this.car, qtdML);
                             BotPayment bt = new BotPayment(socket, account.getAccountID(), account.getSenha(), postoCombustivel.getFSAccountID(), precoAPagar);
                             bt.start();
-                            this.car.setSpeed(50);
                         } catch (Exception e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();

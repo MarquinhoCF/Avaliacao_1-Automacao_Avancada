@@ -4,19 +4,14 @@ import de.tudresden.sumo.cmd.Vehicle;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import org.json.JSONObject;
-
 import it.polito.appeal.traci.SumoTraciConnection;
-import javafx.animation.RotateTransition;
 import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import de.tudresden.sumo.objects.SumoStringList;
+import io.sim.JSONConverter;
 import io.sim.company.Company;
 import io.sim.company.Rota;
 
@@ -49,7 +44,11 @@ public class Car extends Vehicle implements Runnable {
 	private double fuelTank;
 	private double maxFuelCapacity;
 	private String carStatus;
-	private int distanciaPercorrida; // Em m
+	private double latInicial;
+	private double lonInicial;
+	private double latAtual;
+	private double lonAtual;
+	private DrivingData drivingDataAtual;
 	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
 	private TransportService ts;
 
@@ -82,12 +81,17 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 50;
+		this.speed = 100;
 		this.rota = null;
 		this.fuelTank = 10000;
 		this.maxFuelCapacity = 55000;
 		this.carStatus = "aguardando";
 		this.drivingRepport = new ArrayList<DrivingData>();
+		
+		this.drivingDataAtual = new DrivingData(idCar, driverID, "aguardando", 0, 0, 0, 
+												0, 0, 0, 0, "", "", 
+												0, 0, 0, 1, this.fuelType,
+												this.fuelPrice,0, 0, this.personCapacity, this.personNumber);
 	}
 
 	@Override
@@ -104,11 +108,11 @@ public class Car extends Vehicle implements Runnable {
 			// System.out.println(this.idCar + " conectado!!");
 
 			while (!finalizado) {
-				// Recebndo Rota
+				// Recebendo Rota
 				// Manda "aguardando" da primeira vez
-				saida.writeUTF(criaJSONComunicacao(carStatus).toString());
+				saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 				System.out.println(this.idCar + " aguardando rota");
-				rota = criaRotaDeJSON(new JSONObject((String) entrada.readUTF()));
+				rota = JSONConverter.extraiRota(entrada.readUTF());
 
 				if(rota.getID().equals("-1")) {
 					System.out.println(this.idCar +" - Sem rotas a receber.");
@@ -118,17 +122,10 @@ public class Car extends Vehicle implements Runnable {
 
 				System.out.println(this.idCar + " leu " + rota.getID());
 
-				// Zerando o atributo Distance
-				this.distanciaPercorrida = 0;
-				double latRef = 0;
-				double lonRef = 0;
-
 				ts = new TransportService(true, this.idCar, rota, this, this.sumo);
 				ts.start();
-				System.out.println("CAR - TransportService ativo");
-
-				//Thread.sleep(200);
-
+				//System.out.println("CAR - TransportService ativo");
+			
 				String edgeFinal = this.getEdgeFinal(); 
 				this.on_off = true;
 				while(!Company.estaNoSUMO(this.idCar, this.sumo)) {
@@ -141,8 +138,8 @@ public class Car extends Vehicle implements Runnable {
 					// Thread.sleep(this.acquisitionRate);
 					if (initRoute) {
 						double[] coordGeo = calculaCoordGeograficas();
-						latRef = coordGeo[0];
-						lonRef = coordGeo[1];
+						latInicial = coordGeo[0];
+						lonInicial = coordGeo[1];
 						initRoute = false;
 					}
 
@@ -150,7 +147,7 @@ public class Car extends Vehicle implements Runnable {
 						System.out.println(this.idCar + " acabou a rota.");
 						//this.ts.setOn_off(false);
 						this.carStatus = "finalizado";
-						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
+						saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 						this.on_off = false;
 						break;
 					} 
@@ -160,10 +157,15 @@ public class Car extends Vehicle implements Runnable {
 					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
 						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
-						atualizaDistanciaPercorrida(latRef, lonRef);
-						atualizaSensores(); // BOZASSO AQUI
-						this.carStatus = "rodando";
-						saida.writeUTF(criaJSONComunicacao(carStatus).toString());
+						double[] coordGeo = calculaCoordGeograficas();
+						latAtual = coordGeo[0];
+						lonAtual = coordGeo[1];
+						atualizaSensores();
+						if (carStatus != "abastecendo") {
+							this.carStatus = "rodando";
+						}
+						
+						saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 						
 						if(this.carStatus.equals("finalizado")) {
 							this.on_off = false;
@@ -189,7 +191,6 @@ public class Car extends Vehicle implements Runnable {
 			socket.close();
 			this.ts.setTerminado(true);
         } catch (Exception e) {
-            // TODO Car-generated catch block
             e.printStackTrace();
         }
 
@@ -208,12 +209,15 @@ public class Car extends Vehicle implements Runnable {
 				// System.out.println("RouteIndex: " + this.sumo.do_job_get(Vehicle.getRouteIndex(this.idCar)));
 				
 				// Criacao dos dados de conducao do veiculo
-				DrivingData repport = new DrivingData(
-						this.idCar, this.driverID, System.currentTimeMillis(), sumoPosition2D.x, sumoPosition2D.y,
+				drivingDataAtual = new DrivingData(
+						this.idCar, this.driverID, this.carStatus, this.latInicial, this.lonInicial,
+						this.latAtual, this.lonAtual,
+						
+						System.currentTimeMillis(), sumoPosition2D.x, sumoPosition2D.y,
 						(String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)),
 						(String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)),
 						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)),
-						getDistanciaPercorrida(),
+						(double) this.sumo.do_job_get(Vehicle.getDistance(this.idCar)),
 
 						(double) this.sumo.do_job_get(Vehicle.getFuelConsumption(this.idCar)),
 						// Vehicle's fuel consumption in ml/s during this time step,
@@ -246,7 +250,7 @@ public class Car extends Vehicle implements Runnable {
 				// velocidadePermitida = (double)
 				// sumo.do_job_get(Vehicle.getAllowedSpeed(this.idSumoVehicle));
 
-				this.drivingRepport.add(repport);
+				this.drivingRepport.add(drivingDataAtual);
 
 				//System.out.println("Data: " + this.drivingRepport.size());
 				// System.out.println("idCar = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getCarID());
@@ -287,9 +291,10 @@ public class Car extends Vehicle implements Runnable {
 				//System.out.println(
 				//		"getSpeedDeviation = " + (double) sumo.do_job_get(Vehicle.getSpeedDeviation(this.idCar)));
 				
-				
-				//this.setSpeed(speed); // ATENÇÃOOOOOOOOOO PRA ISSO AQUI
-
+				if (carStatus != "abastecendo") {
+					this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
+					this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
+				}
 				
 				// System.out.println("getPersonNumber = " + sumo.do_job_get(Vehicle.getPersonNumber(this.idCar)));
 				//System.out.println("getPersonIDList = " + sumo.do_job_get(Vehicle.getPersonIDList(this.idCar)));
@@ -303,20 +308,6 @@ public class Car extends Vehicle implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private JSONObject criaJSONComunicacao(String carStatus) {
-		JSONObject my_json = new JSONObject();
-		my_json.put("Driver ID", driverID);
-		my_json.put("Status do Carro", carStatus);
-		if (rota != null) {
-			my_json.put("ID da Rota", rota.getID());
-		} else {
-			my_json.put("ID da Rota", "");
-		}
-		my_json.put("Distancia Percorrida", getDistanciaPercorrida());
-		
-		return my_json;
 	}
 
 	public String getCarStatus() {
@@ -355,14 +346,6 @@ public class Car extends Vehicle implements Runnable {
 		return this.idCar;
 	}
 
-	public void incrementaDistanciaPercorrida() {
-		distanciaPercorrida++;
-	}
-
-	public int getDistanciaPercorrida() {
-		return distanciaPercorrida;
-	}
-
 	public SumoTraciConnection getSumo() {
 		return this.sumo;
 	}
@@ -394,7 +377,6 @@ public class Car extends Vehicle implements Runnable {
 			try {
 				pararCarro();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -409,8 +391,10 @@ public class Car extends Vehicle implements Runnable {
 		return this.maxFuelCapacity;
 	}
 
-	public void abastecido() {
+	public void abastecido() throws Exception{
 		fuelTank = maxFuelCapacity;
+		carStatus = "rodando";
+		voltarAndar();
 	}
 
 	public SumoColor getColorCar() {
@@ -437,7 +421,7 @@ public class Car extends Vehicle implements Runnable {
 		return this.personNumber;
 	}
 
-	public void setSpeed(double speed) throws Exception {
+	public void voltarAndar() throws Exception {
 		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
 		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
 	}
@@ -449,6 +433,11 @@ public class Car extends Vehicle implements Runnable {
 	public void pararCarro() throws Exception{
 		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 0));
 		sumo.do_job_set(Vehicle.setSpeed(this.idCar, 0));
+	}
+
+	public void preparaAbastecimento() throws Exception{
+		carStatus = "abastecendo";
+		pararCarro();
 	}
 
 	// Pega a última posição da Rota
@@ -476,11 +465,6 @@ public class Car extends Vehicle implements Runnable {
 		}
 	}
 
-	private Rota criaRotaDeJSON(JSONObject rotaJSON) {
-		Rota rota = new Rota(rotaJSON.getString("ID da Rota"), rotaJSON.getString("Edges"));
-        return rota;
-	}
-
 	private double[] calculaCoordGeograficas() throws Exception {
 		SumoPosition2D sumoPosition2D = (SumoPosition2D) sumo.do_job_get(Vehicle.getPosition(this.idCar));
 
@@ -489,8 +473,8 @@ public class Car extends Vehicle implements Runnable {
 
 		double raioTerra = 6371000; // raio médio da Terra em metros
 
-		double latRef = 0;
-		double lonRef = 0;
+		double latRef = -22.986731;
+		double lonRef = -43.217054;
 
 		// Conversão de metros para graus
 		double lat = latRef + (y / raioTerra) * (180 / Math.PI);
@@ -500,34 +484,4 @@ public class Car extends Vehicle implements Runnable {
 		return coordGeo;
 	}
 
-	private double calculaDistancia(double lat1, double lon1, double lat2, double lon2) {
-		double raioTerra = 6371000;
-	
-		// Diferenças das latitudes e longitudes
-		double diferancaLat = Math.toRadians(lat2 - lat1);
-		double diferancaLon = Math.toRadians(lon2 - lon1);
-	
-		// Fórmula de Haversine
-		double a = Math.sin(diferancaLat / 2) * Math.sin(diferancaLat / 2) +
-				   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-				   Math.sin(diferancaLon / 2) * Math.sin(diferancaLon / 2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		double distancia = raioTerra * c;
-	
-		return distancia;
-	}
-
-	public void atualizaDistanciaPercorrida(double latInicial, double lonInicial) throws Exception {
-		double[] coordGeo = calculaCoordGeograficas();
-
-		double latAtual = coordGeo[0];
-		double lonAtual = coordGeo[1];
-
-		double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
-
-		System.out.println(idCar + " percorreu " + distancia + " metros");
-		if (distancia > (distanciaPercorrida + 1000)) {
-			distanciaPercorrida += 1000;
-		}
-	}
 }

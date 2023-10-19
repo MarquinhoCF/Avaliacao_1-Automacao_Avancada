@@ -5,7 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.json.JSONObject;
+import io.sim.JSONConverter;
 
 public class BotPayment extends Thread {
     private Socket socket;
@@ -29,15 +29,17 @@ public class BotPayment extends Thread {
             DataOutputStream output = new DataOutputStream(socket.getOutputStream());
             DataInputStream input = new DataInputStream(socket.getInputStream());
 
-            // Construa a solicitação em formato JSON
-            JSONObject jsonTransferencia = criaJSONTransferencia("Transferencia", pagadorID, pagadorSenha, recebedorID, quantia);
+            String[] login = { pagadorID, pagadorSenha };
 
-            // Envie a solicitação ao servidor AlphaBank
-            output.writeUTF(jsonTransferencia.toString());
+            output.writeUTF(JSONConverter.criarJSONLogin(login));
+
+            TransferData td = new TransferData(recebedorID, "Pagamento", pagadorID, quantia);
+
+            output.writeUTF(JSONConverter.criaJSONTransferData(td));
 
             // Aguarde a resposta do servidor AlphaBank
-            JSONObject resposta = new JSONObject((String) input.readUTF());
-            boolean sucesso = resposta.getBoolean("Resposta");
+            String resposta = input.readUTF();
+            boolean sucesso = JSONConverter.extraiResposta(resposta);
 
             if (sucesso) {
                 System.out.println("Transferência bem-sucedida!");
@@ -49,16 +51,6 @@ public class BotPayment extends Thread {
         }
     }
 
-    private JSONObject criaJSONTransferencia(String operacao, String pagadorID, String senhaPagador, String recebedorID, double quantia) {
-		JSONObject my_json = new JSONObject();
-        my_json.put("Operacao", operacao);
-		my_json.put("ID do Pagador", pagadorID);
-		my_json.put("Senha do Pagador", senhaPagador);
-        my_json.put("ID do Recebedor", recebedorID);
-		my_json.put("Quantia", quantia);
-		
-		return my_json;
-	}
 }
 
 

@@ -5,7 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
-import org.json.JSONObject;
+import io.sim.JSONConverter;
 
 public class AccountManipulator extends Thread {
 
@@ -27,64 +27,37 @@ public class AccountManipulator extends Thread {
             saida = new DataOutputStream(socket.getOutputStream());
             
             while (!sair) {
-                JSONObject dadosOperacao = new JSONObject((String) entrada.readUTF());
-                String operacao = dadosOperacao.getString("Operacao");
+                String[] login = JSONConverter.extraiLogin(entrada.readUTF());
 
-                System.out.println("Leu as informações de Operacao!!");
-                switch (operacao) {
-                    case "Transferencia":
-                        String pagadorID = dadosOperacao.getString("ID do Pagador");
-                        String senha = dadosOperacao.getString("Senha do Pagador");
-                        if (alphaBank.fazerLogin(pagadorID, senha)) {
-                            String recebedorID = dadosOperacao.getString("ID do Recebedor");
-                            double quantia = dadosOperacao.getDouble("Quantia");
-                            dadosOperacao.getDouble("Quantia");
-                            if (alphaBank.transferencia(pagadorID, recebedorID, quantia)) {
-                                saida.writeUTF(criaRespostaServidor(true).toString());
-                                criarRegistro(true, pagadorID, recebedorID, quantia);
-                                criarRegistro(false, pagadorID, recebedorID, quantia);
+                if (alphaBank.fazerLogin(login)) {
+                    TransferData tf = JSONConverter.extraiTransferData(entrada.readUTF());
+                    System.out.println("Leu as informações de Operacao!!");
+                    String operacao = tf.getOperacao();
+                    switch (operacao) {
+                        case "Pagamento":
+                            String recebedorID = tf.getRecebedor();
+                            double quantia = tf.getQuantia();
+                            if (alphaBank.transferencia(login[0], recebedorID, quantia)) {
+                                saida.writeUTF(JSONConverter.criaRespostaTransferencia(true));
+                                alphaBank.adicionaRegistros(tf);
                             } else {
-                                saida.writeUTF(criaRespostaServidor(false).toString());
+                                saida.writeUTF(JSONConverter.criaRespostaTransferencia(false));
                             }
-                        } else {
-                            System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + pagadorID);
-                        }
-                        break;
-                    case "Sair":
-                        sair = true;
-                        break;
-                    default:
-                        break;
+                            
+                            break;
+                        case "Sair":
+                            sair = true;
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + login[0]);
                 }
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
-
-    private JSONObject criaRespostaServidor(boolean sucesso) {
-        JSONObject my_json = new JSONObject();
-        my_json.put("Resposta", sucesso);
-        return my_json;
-    }
-
-    public void criarRegistro(boolean operacao, String pagadorID, String recebedorID, double quantia) throws IOException {
-        Register notificacao = null;
-
-        // operacao = true -> Pagamento
-        if (operacao) {
-            notificacao = new Register(pagadorID, "Pagamento", recebedorID, quantia);
-        } else {
-            notificacao = new Register(recebedorID, "Recebimento", pagadorID, quantia);
-        }
-
-        if (notificacao != null) {
-            alphaBank.adicionaRegistro(notificacao);
-        } else {
-            System.out.println("SAB - Erro na criacao do registro!!");
-        }
-        
-    }
     
-
 }

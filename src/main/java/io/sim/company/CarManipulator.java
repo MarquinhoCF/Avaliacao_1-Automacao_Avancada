@@ -5,7 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.json.JSONObject;
+import io.sim.JSONConverter;
+import io.sim.driver.DrivingData;
 
 public class CarManipulator extends Thread {
     private Socket carSocket;
@@ -35,41 +36,47 @@ public class CarManipulator extends Thread {
     public void run() {
         try {
             String StatusDoCarro = "";
-            double distanciaAnterior = 0;
+            double distanciaPercorrida = 0;
 
-             // loop principal
+            // loop principal
             while(!StatusDoCarro.equals("encerrado")) {
                 // System.out.println("Aguardando mensagem...");
-                JSONObject jsonComunicacao = new JSONObject((String) entrada.readUTF());
-                StatusDoCarro = jsonComunicacao.getString("Status do Carro"); // lê solicitacao do cliente
+                DrivingData comunicacao = JSONConverter.extraiDrivingData(entrada.readUTF());
+                StatusDoCarro = comunicacao.getCarStatus(); // lê solicitacao do cliente
                 
-                long distanciaPercorrida = jsonComunicacao.getLong("Distancia Percorrida");
-                if (distanciaPercorrida > distanciaAnterior) {
-                    String driverID = jsonComunicacao.getString("Driver ID");
+                double latInicial = comunicacao.getLatInicial();
+                double lonInicial = comunicacao.getLonInicial();
+                double latAtual = comunicacao.getLatAtual();
+                double lonAtual = comunicacao.getLonAtual();
+
+                double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
+
+                System.out.println(comunicacao.getCarID() + " percorreu " + distancia + " metros");
+		        if (distancia > (distanciaPercorrida + 1000)) {
+			        distanciaPercorrida += 1000;
+                    String driverID = comunicacao.getDriverID();
                     company.fazerPagamento(driverID);
-                    distanciaAnterior = distanciaPercorrida;
-                } else {
-                    distanciaAnterior = distanciaPercorrida;
-                }
+		        }
                 
                 if (StatusDoCarro.equals("aguardando")) {
                     if(!Company.temRotasDisponiveis()) {
                         System.out.println("SMC - Sem mais rotas para liberar.");
                         Rota rota = new Rota("-1", "00000");
-                        saida.writeUTF(criaJSONRota(rota).toString());
+                        saida.writeUTF(JSONConverter.criaJSONRota(rota));
                         break;
                     }
 
                     if(Company.temRotasDisponiveis()) {
                         synchronized (sincroniza) {
                             Rota resposta = company.executarRota();
-                            saida.writeUTF(criaJSONRota(resposta).toString());
+                            saida.writeUTF(JSONConverter.criaJSONRota(resposta));
                         }
                     }
                 } else if(StatusDoCarro.equals("finalizado")) {
-                    String routeID = jsonComunicacao.getString("ID da Rota");
+                    String routeID = comunicacao.getRouteIDSUMO();
                     System.out.println("SMC - Rota " + routeID + " finalizada.");
                     company.terminarRota(routeID);
+                    distanciaPercorrida = 0;
                     System.out.println("Aguardando mensagem...");
                 } else if(StatusDoCarro.equals("rodando")) {
                     // a principio, nao faz nada
@@ -87,11 +94,21 @@ public class CarManipulator extends Thread {
         }
     }
 
-    public JSONObject criaJSONRota(Rota rota) {
-        JSONObject rotaJSON = new JSONObject();
-        rotaJSON.put("ID da Rota", rota.getID());
-        rotaJSON.put("Edges", rota.getEdges());
-        return rotaJSON;
-    }
+    private double calculaDistancia(double lat1, double lon1, double lat2, double lon2) {
+		double raioTerra = 6371000;
+	
+		// Diferenças das latitudes e longitudes
+		double diferancaLat = Math.toRadians(lat2 - lat1);
+		double diferancaLon = Math.toRadians(lon2 - lon1);
+	
+		// Fórmula de Haversine
+		double a = Math.sin(diferancaLat / 2) * Math.sin(diferancaLat / 2) +
+				   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+				   Math.sin(diferancaLon / 2) * Math.sin(diferancaLon / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		double distancia = raioTerra * c;
+	
+		return distancia;
+	}
     
 }
