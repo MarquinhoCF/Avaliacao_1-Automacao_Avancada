@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
+import io.sim.AESencrypt;
 import io.sim.JSONConverter;
 
 public class AccountManipulator extends Thread {
@@ -25,23 +26,35 @@ public class AccountManipulator extends Thread {
         try {
             entrada = new DataInputStream(socket.getInputStream());
             saida = new DataOutputStream(socket.getOutputStream());
+            int numBytesMsg;
+            byte[] mensagemEncriptada;
             
             while (!sair) {
-                String[] login = JSONConverter.extraiLogin(entrada.readUTF());
+                numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
+                String[] login = JSONConverter.extraiLogin(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
 
                 if (alphaBank.fazerLogin(login)) {
-                    TransferData tf = JSONConverter.extraiTransferData(entrada.readUTF());
+                    System.out.println(login[0] + " FEZ O LOGIN");
+                    numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
+                    TransferData tf = JSONConverter.extraiTransferData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
                     System.out.println("Leu as informações de Operacao!!");
                     String operacao = tf.getOperacao();
                     switch (operacao) {
                         case "Pagamento":
                             String recebedorID = tf.getRecebedor();
                             double quantia = tf.getQuantia();
+                        System.out.println(recebedorID + " VAI RECEBER R$" + quantia);
                             if (alphaBank.transferencia(login[0], recebedorID, quantia)) {
-                                saida.writeUTF(JSONConverter.criaRespostaTransferencia(true));
+                                mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(true));
+                                saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+                                saida.write(mensagemEncriptada);
+                                //saida.write(AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(true)));
                                 alphaBank.adicionaRegistros(tf);
                             } else {
-                                saida.writeUTF(JSONConverter.criaRespostaTransferencia(false));
+                                mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(false));
+                                saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+                                saida.write(mensagemEncriptada);
+                                //saida.write(AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(false)));
                             }
                             
                             break;
@@ -54,9 +67,11 @@ public class AccountManipulator extends Thread {
                 } else {
                     System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + login[0]);
                 }
-            }
+            } 
         } catch (IOException ex) {
             ex.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
     

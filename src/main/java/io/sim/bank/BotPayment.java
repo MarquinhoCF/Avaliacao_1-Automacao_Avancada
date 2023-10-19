@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import io.sim.AESencrypt;
 import io.sim.JSONConverter;
 
 public class BotPayment extends Thread {
@@ -28,18 +29,27 @@ public class BotPayment extends Thread {
             // Crie streams de entrada e saída para comunicar com o servidor AlphaBank
             DataOutputStream output = new DataOutputStream(socket.getOutputStream());
             DataInputStream input = new DataInputStream(socket.getInputStream());
+            int numBytesMsg;
+            byte[] mensagemEncriptada;
 
             String[] login = { pagadorID, pagadorSenha };
 
-            output.writeUTF(JSONConverter.criarJSONLogin(login));
+            mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONLogin(login));
+			output.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+			output.write(mensagemEncriptada);
+            //output.write(AESencrypt.encripta(JSONConverter.criarJSONLogin(login)));
 
-            TransferData td = new TransferData(recebedorID, "Pagamento", pagadorID, quantia);
+            TransferData td = new TransferData(pagadorID, "Pagamento", recebedorID, quantia);
 
-            output.writeUTF(JSONConverter.criaJSONTransferData(td));
+            mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONTransferData(td));
+			output.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+			output.write(mensagemEncriptada);
+            //output.write(AESencrypt.encripta(JSONConverter.criaJSONTransferData(td)));
 
             // Aguarde a resposta do servidor AlphaBank
-            String resposta = input.readUTF();
-            boolean sucesso = JSONConverter.extraiResposta(resposta);
+            numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(input.readNBytes(AESencrypt.getTamNumBytes())));
+            boolean sucesso = JSONConverter.extraiResposta(AESencrypt.decripta(input.readNBytes(numBytesMsg)));
+            //boolean sucesso = JSONConverter.extraiResposta(AESencrypt.decripta(input.readAllBytes()));
 
             if (sucesso) {
                 System.out.println("Transferência bem-sucedida!");
@@ -47,6 +57,8 @@ public class BotPayment extends Thread {
                 System.out.println("Transferência falhou.");
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

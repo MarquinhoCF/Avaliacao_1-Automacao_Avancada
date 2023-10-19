@@ -5,10 +5,7 @@ import io.sim.projeto.FuelStation;
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
-import io.sim.company.Company;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,9 +15,7 @@ public class Driver extends Thread {
     private Account account;
     private Socket socket;
     private int alphaBankServerPort;
-    private String alphaBankServerHost; 
-    private DataInputStream entrada;
-    private DataOutputStream saida;
+    private String alphaBankServerHost;
     
     // Atributos da Classe
     private String driverID;
@@ -53,8 +48,6 @@ public class Driver extends Thread {
             System.out.println("Iniciando " + this.driverID);
             
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
-            entrada = new DataInputStream(socket.getInputStream());
-			saida = new DataOutputStream(socket.getOutputStream());
             this.account = Account.criaAccount(driverID, saldoInicial);
             AlphaBank.adicionarAccount(account);
             account.start();
@@ -76,7 +69,7 @@ public class Driver extends Thread {
                     initRoute = true; 
                 }
 
-                if (this.car.getNivelDoTanque() < 7500){
+                if (this.car.getNivelDoTanque() < 9000){
                     //this.car.setSpeed(0);
                     double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000;
                     double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo());
@@ -90,7 +83,6 @@ public class Driver extends Thread {
                             BotPayment bt = new BotPayment(socket, account.getAccountID(), account.getSenha(), postoCombustivel.getFSAccountID(), precoAPagar);
                             bt.start();
                         } catch (Exception e) {
-                            // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
                     } else {
@@ -104,10 +96,8 @@ public class Driver extends Thread {
             System.out.println("Encerrando " + driverID);
             // this.car.join();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

@@ -120,7 +120,6 @@ public class AlphaBank extends Thread {
                         return registrosPendentes.remove(i);
                     }
                 }
-                System.out.println("Não há registros para esa conta");
             }
             return null;
         }

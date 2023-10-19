@@ -11,6 +11,7 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import de.tudresden.sumo.objects.SumoStringList;
+import io.sim.AESencrypt;
 import io.sim.JSONConverter;
 import io.sim.company.Company;
 import io.sim.company.Rota;
@@ -106,13 +107,21 @@ public class Car extends Vehicle implements Runnable {
 			saida = new DataOutputStream(socket.getOutputStream());
 
 			// System.out.println(this.idCar + " conectado!!");
+			int numBytesMsg;
+			byte[] mensagemEncriptada;
 
 			while (!finalizado) {
 				// Recebendo Rota
 				// Manda "aguardando" da primeira vez
-				saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+				
+				mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+				saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+				saida.write(mensagemEncriptada);
+
 				System.out.println(this.idCar + " aguardando rota");
-				rota = JSONConverter.extraiRota(entrada.readUTF());
+				numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
+                rota = JSONConverter.extraiRota(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
+				//rota = JSONConverter.extraiRota(AESencrypt.decripta(entrada.readAllBytes()));
 
 				if(rota.getID().equals("-1")) {
 					System.out.println(this.idCar +" - Sem rotas a receber.");
@@ -147,7 +156,10 @@ public class Car extends Vehicle implements Runnable {
 						System.out.println(this.idCar + " acabou a rota.");
 						//this.ts.setOn_off(false);
 						this.carStatus = "finalizado";
-						saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+						mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+						saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+						saida.write(mensagemEncriptada);
+						//saida.write(AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual)));
 						this.on_off = false;
 						break;
 					} 
@@ -165,7 +177,10 @@ public class Car extends Vehicle implements Runnable {
 							this.carStatus = "rodando";
 						}
 						
-						saida.writeUTF(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+						mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
+						saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+						saida.write(mensagemEncriptada);
+						//saida.write(AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual)));
 						
 						if(this.carStatus.equals("finalizado")) {
 							this.on_off = false;

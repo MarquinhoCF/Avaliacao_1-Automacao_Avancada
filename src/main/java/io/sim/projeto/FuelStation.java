@@ -1,7 +1,5 @@
 package io.sim.projeto;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
@@ -19,9 +17,7 @@ public class FuelStation extends Thread {
     private Socket socket;
     private Account account;
     private int alphaBankServerPort;
-    private String alphaBankServerHost; 
-    private DataInputStream entrada;
-    private DataOutputStream saida;
+    private String alphaBankServerHost;
 
     public FuelStation(int _alphaBankServerPort, String _alphaBankServerHost) {
         this.bombas = new Semaphore(2); // Duas bombas de combustível disponíveis
@@ -38,8 +34,6 @@ public class FuelStation extends Thread {
             System.out.println("Fuel Station iniciando...");
 
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
-            entrada = new DataInputStream(socket.getInputStream());
-            saida = new DataOutputStream(socket.getOutputStream());
             this.account = Account.criaAccount("Fuel Station", 0);
             AlphaBank.adicionarAccount(account);
             account.start();

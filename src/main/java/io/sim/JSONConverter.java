@@ -9,6 +9,22 @@ import io.sim.bank.TransferData;
 // Classe para tratar as comunicacoes entre classes
 public class JSONConverter {
 
+    public JSONConverter() {
+
+    }
+
+    public static int extraiTamanhoBytes(String numBytesJSON) {
+        JSONObject my_json = new JSONObject(numBytesJSON);
+        int numBytes = my_json.getInt("Num Bytes");
+        return numBytes;
+    }
+
+    public static String criaJSONTamanhoBytes(int numBytes) {
+        JSONObject my_json = new JSONObject();
+        my_json.put("Num Bytes", numBytes);
+        return my_json.toString();
+    }
+
     //                                        Usadas na lógica de pagamentos
     //--------------------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +35,17 @@ public class JSONConverter {
         String[] login = new String[] { loginJSONObj.getString("ID do Pagador"), loginJSONObj.getString("Senha do Pagador") };
         return login;
     }
+
+     // -> CLIENTE
+    // Chamada em BotPayment
+    public static String criaJSONTransferData(TransferData transferData) {
+        JSONObject transferDataJSON = new JSONObject();
+		transferDataJSON.put("ID do Pagador", transferData.getPagador());
+        transferDataJSON.put("Operacao", transferData.getOperacao());
+        transferDataJSON.put("ID do Recebedor", transferData.getRecebedor());
+		transferDataJSON.put("Quantia", transferData.getQuantia());
+		return transferDataJSON.toString();
+	}
 
     // -> SERVIDOR
     // Chamada em AccountManipulator
@@ -40,16 +67,6 @@ public class JSONConverter {
         return my_json.toString();
     }
 
-    // -> CLIENTE
-    // Chamada em BotPayment
-    public static String criaJSONTransferData(TransferData transferData) {
-        JSONObject transferDataJSON = new JSONObject();
-		transferDataJSON.put("ID do Pagador", transferData.getPagador());
-        transferDataJSON.put("Operacao", transferData.getOperacao());
-        transferDataJSON.put("ID do Recebedor", transferData.getRecebedor());
-		transferDataJSON.put("Quantia", transferData.getQuantia());
-		return transferDataJSON.toString();
-	}
 
     // -> CLIENTE
     // Chamada em BotPayment

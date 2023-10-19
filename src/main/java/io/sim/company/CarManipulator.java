@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import io.sim.AESencrypt;
 import io.sim.JSONConverter;
 import io.sim.driver.DrivingData;
 
@@ -37,11 +38,15 @@ public class CarManipulator extends Thread {
         try {
             String StatusDoCarro = "";
             double distanciaPercorrida = 0;
+            int numBytesMsg;
+            byte[] mensagemEncriptada;
 
             // loop principal
             while(!StatusDoCarro.equals("encerrado")) {
                 // System.out.println("Aguardando mensagem...");
-                DrivingData comunicacao = JSONConverter.extraiDrivingData(entrada.readUTF());
+                numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
+                DrivingData comunicacao = JSONConverter.extraiDrivingData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
+                
                 StatusDoCarro = comunicacao.getCarStatus(); // lê solicitacao do cliente
                 
                 double latInicial = comunicacao.getLatInicial();
@@ -62,14 +67,20 @@ public class CarManipulator extends Thread {
                     if(!Company.temRotasDisponiveis()) {
                         System.out.println("SMC - Sem mais rotas para liberar.");
                         Rota rota = new Rota("-1", "00000");
-                        saida.writeUTF(JSONConverter.criaJSONRota(rota));
+                        mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(rota));
+				        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+				        saida.write(mensagemEncriptada);
+                        //saida.write(AESencrypt.encripta(JSONConverter.criaJSONRota(rota)));
                         break;
                     }
 
                     if(Company.temRotasDisponiveis()) {
                         synchronized (sincroniza) {
                             Rota resposta = company.executarRota();
-                            saida.writeUTF(JSONConverter.criaJSONRota(resposta));
+                            mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(resposta));
+				            saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+				            saida.write(mensagemEncriptada);
+                            //saida.write(AESencrypt.encripta(JSONConverter.criaJSONRota(resposta)));
                         }
                     }
                 } else if(StatusDoCarro.equals("finalizado")) {
@@ -89,7 +100,9 @@ public class CarManipulator extends Thread {
             entrada.close();
             saida.close();
             carSocket.close();
-        } catch (IOException e) {
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
