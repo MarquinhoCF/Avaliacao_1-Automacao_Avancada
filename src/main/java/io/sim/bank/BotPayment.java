@@ -37,19 +37,16 @@ public class BotPayment extends Thread {
             mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONLogin(login));
 			output.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 			output.write(mensagemEncriptada);
-            //output.write(AESencrypt.encripta(JSONConverter.criarJSONLogin(login)));
 
             TransferData td = new TransferData(pagadorID, "Pagamento", recebedorID, quantia);
 
             mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONTransferData(td));
 			output.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 			output.write(mensagemEncriptada);
-            //output.write(AESencrypt.encripta(JSONConverter.criaJSONTransferData(td)));
 
             // Aguarde a resposta do servidor AlphaBank
             numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(input.readNBytes(AESencrypt.getTamNumBytes())));
             boolean sucesso = JSONConverter.extraiResposta(AESencrypt.decripta(input.readNBytes(numBytesMsg)));
-            //boolean sucesso = JSONConverter.extraiResposta(AESencrypt.decripta(input.readAllBytes()));
 
             if (sucesso) {
                 System.out.println("Transferência bem-sucedida!");

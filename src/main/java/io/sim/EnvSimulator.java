@@ -5,7 +5,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 
 import io.sim.driver.Driver;
-import io.sim.projeto.FuelStation;
+import io.sim.fuelStation.FuelStation;
 import io.sim.bank.AlphaBank;
 import io.sim.company.Company;
 import it.polito.appeal.traci.SumoTraciConnection;

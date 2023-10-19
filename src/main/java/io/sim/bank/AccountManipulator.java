@@ -48,13 +48,11 @@ public class AccountManipulator extends Thread {
                                 mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(true));
                                 saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
                                 saida.write(mensagemEncriptada);
-                                //saida.write(AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(true)));
                                 alphaBank.adicionaRegistros(tf);
                             } else {
                                 mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(false));
                                 saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
                                 saida.write(mensagemEncriptada);
-                                //saida.write(AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(false)));
                             }
                             
                             break;

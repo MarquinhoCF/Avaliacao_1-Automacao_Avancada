@@ -13,11 +13,8 @@ public class JSONConverter {
 
     }
 
-    public static int extraiTamanhoBytes(String numBytesJSON) {
-        JSONObject my_json = new JSONObject(numBytesJSON);
-        int numBytes = my_json.getInt("Num Bytes");
-        return numBytes;
-    }
+    //                              Usadas no envio e recebimento de mensagens via Socket
+    //--------------------------------------------------------------------------------------------------------------------------
 
     public static String criaJSONTamanhoBytes(int numBytes) {
         JSONObject my_json = new JSONObject();
@@ -25,8 +22,23 @@ public class JSONConverter {
         return my_json.toString();
     }
 
+    public static int extraiTamanhoBytes(String numBytesJSON) {
+        JSONObject my_json = new JSONObject(numBytesJSON);
+        int numBytes = my_json.getInt("Num Bytes");
+        return numBytes;
+    }
+
     //                                        Usadas na lógica de pagamentos
     //--------------------------------------------------------------------------------------------------------------------------
+
+    // -> CLIENTE
+    // Chamada em BotPayment
+    public static String criarJSONLogin(String[] login) {
+        JSONObject loginJSONObj = new JSONObject();
+        loginJSONObj.put("ID do Pagador", login[0]);
+		loginJSONObj.put("Senha do Pagador", login[1]);
+        return loginJSONObj.toString();
+    }
 
     // -> SERVIDOR
     // Chamada em AccountManipulator
@@ -35,17 +47,6 @@ public class JSONConverter {
         String[] login = new String[] { loginJSONObj.getString("ID do Pagador"), loginJSONObj.getString("Senha do Pagador") };
         return login;
     }
-
-     // -> CLIENTE
-    // Chamada em BotPayment
-    public static String criaJSONTransferData(TransferData transferData) {
-        JSONObject transferDataJSON = new JSONObject();
-		transferDataJSON.put("ID do Pagador", transferData.getPagador());
-        transferDataJSON.put("Operacao", transferData.getOperacao());
-        transferDataJSON.put("ID do Recebedor", transferData.getRecebedor());
-		transferDataJSON.put("Quantia", transferData.getQuantia());
-		return transferDataJSON.toString();
-	}
 
     // -> SERVIDOR
     // Chamada em AccountManipulator
@@ -59,22 +60,23 @@ public class JSONConverter {
 		return tf;
 	}
 
+    // -> CLIENTE
+    // Chamada em BotPayment
+    public static String criaJSONTransferData(TransferData transferData) {
+        JSONObject transferDataJSON = new JSONObject();
+		transferDataJSON.put("ID do Pagador", transferData.getPagador());
+        transferDataJSON.put("Operacao", transferData.getOperacao());
+        transferDataJSON.put("ID do Recebedor", transferData.getRecebedor());
+		transferDataJSON.put("Quantia", transferData.getQuantia());
+		return transferDataJSON.toString();
+	}
+
     // -> SERVIDOR
     // Chamada em AccountManipulator
     public static String criaRespostaTransferencia(boolean sucesso) {
         JSONObject my_json = new JSONObject();
         my_json.put("Resposta", sucesso);
         return my_json.toString();
-    }
-
-
-    // -> CLIENTE
-    // Chamada em BotPayment
-    public static String criarJSONLogin(String[] login) {
-        JSONObject loginJSONObj = new JSONObject();
-        loginJSONObj.put("ID do Pagador", login[0]);
-		loginJSONObj.put("Senha do Pagador", login[1]);
-        return loginJSONObj.toString();
     }
 
     // -> CLIENTE
@@ -87,14 +89,7 @@ public class JSONConverter {
     //                                    Usadas na lógica de tratamento de rotas
     //--------------------------------------------------------------------------------------------------------------------------
 
-    // CarManipulator
-    public static String criaJSONRota(Rota rota) {
-        JSONObject rotaJSON = new JSONObject();
-        rotaJSON.put("ID da Rota", rota.getID());
-        rotaJSON.put("Edges", rota.getEdges());
-        return rotaJSON.toString();
-    }
-
+    // -> SERVIDOR
     // CarManipulator
     public static DrivingData extraiDrivingData(String drivingDataJSON) {
 		JSONObject drivingDataJSONObj = new JSONObject(drivingDataJSON);
@@ -106,35 +101,20 @@ public class JSONConverter {
         double latAtual = drivingDataJSONObj.getDouble("Latitude Atual");
         double lonAtual = drivingDataJSONObj.getDouble("Longitude Atual");
         long timeStamp = drivingDataJSONObj.getLong("TimeStamp");
-        double X_Position = drivingDataJSONObj.getDouble("X_Position");
-        double Y_Position = drivingDataJSONObj.getDouble("Y_Position");
-        String roadIDSUMO = drivingDataJSONObj.getString("RoadIDSUMO");
         String routeIDSUMO = drivingDataJSONObj.getString("RouteIDSUMO");
         double speed = drivingDataJSONObj.getDouble("Speed");
-        double odometer = drivingDataJSONObj.getDouble("Odometer");
+        double distance = drivingDataJSONObj.getDouble("Distance");
         double fuelConsumption = drivingDataJSONObj.getDouble("FuelConsumption");
-        double averageFuelConsumption = drivingDataJSONObj.getDouble("AverageFuelConsumption");
         int fuelType = drivingDataJSONObj.getInt("FuelType");
-        double fuelPrice = drivingDataJSONObj.getDouble("FuelPrice");
         double Co2Emission = drivingDataJSONObj.getDouble("Co2Emission");
-        double HCEmission = drivingDataJSONObj.getDouble("HCEmission");
-        int personCapacity = drivingDataJSONObj.getInt("PersonCapacity");
-        int personNumber = drivingDataJSONObj.getInt("PersonNumber");
 
-        DrivingData drivingData = new DrivingData(carID, driverID, carStatus, latInicial, lonInicial, latAtual, lonAtual, timeStamp, 
-        X_Position, Y_Position, roadIDSUMO, routeIDSUMO, speed, odometer, fuelConsumption, averageFuelConsumption, 
-        fuelType, fuelPrice, Co2Emission, HCEmission, personCapacity, personNumber);
+        DrivingData drivingData = new DrivingData(carID, driverID, carStatus, latInicial, lonInicial, latAtual, lonAtual, timeStamp,
+                                                    routeIDSUMO, speed, distance, fuelConsumption, fuelType, Co2Emission);
 
 		return drivingData;
 	}
 
-    // Car
-    public static Rota extraiRota(String rotaJSON) {
-        JSONObject rotaJSONObj = new JSONObject(rotaJSON);
-		Rota rota = new Rota(rotaJSONObj.getString("ID da Rota"), rotaJSONObj.getString("Edges"));
-        return rota;
-	}
-
+    // -> CLIENTE
     // Car
 	public static String criarJSONDrivingData(DrivingData drivingData) {
         JSONObject drivingDataJSON = new JSONObject();
@@ -146,20 +126,30 @@ public class JSONConverter {
         drivingDataJSON.put("Latitude Atual", drivingData.getLatAtual());
         drivingDataJSON.put("Longitude Atual", drivingData.getLonAtual());
 		drivingDataJSON.put("TimeStamp", drivingData.getTimeStamp());
-		drivingDataJSON.put("X_Position", drivingData.getX_Position());
-		drivingDataJSON.put("Y_Position", drivingData.getY_Position());
-		drivingDataJSON.put("RoadIDSUMO", drivingData.getRoadIDSUMO());
-		drivingDataJSON.put("RouteIDSUMO", drivingData.getRouteIDSUMO());
-		drivingDataJSON.put("Speed", drivingData.getSpeed());
-		drivingDataJSON.put("Odometer", drivingData.getOdometer());
-		drivingDataJSON.put("FuelConsumption", drivingData.getFuelConsumption());
-		drivingDataJSON.put("AverageFuelConsumption", drivingData.getAverageFuelConsumption());
-		drivingDataJSON.put("FuelType", drivingData.getFuelType());
-		drivingDataJSON.put("FuelPrice", drivingData.getFuelPrice());
-		drivingDataJSON.put("Co2Emission", drivingData.getCo2Emission());
-		drivingDataJSON.put("HCEmission", drivingData.getHCEmission());
-		drivingDataJSON.put("PersonCapacity", drivingData.getPersonCapacity());
-		drivingDataJSON.put("PersonNumber", drivingData.getPersonNumber());
+        drivingDataJSON.put("RouteIDSUMO", drivingData.getRouteIDSUMO());
+        drivingDataJSON.put("Speed", drivingData.getSpeed());
+		drivingDataJSON.put("Distance", drivingData.getDistance());
+        drivingDataJSON.put("FuelConsumption", drivingData.getFuelConsumption());
+        drivingDataJSON.put("FuelType", drivingData.getFuelType());
+        drivingDataJSON.put("Co2Emission", drivingData.getCo2Emission());
         return drivingDataJSON.toString();
 	}
+
+    // -> SERVIDOR
+    // CarManipulator
+    public static String criaJSONRota(Rota rota) {
+        JSONObject rotaJSON = new JSONObject();
+        rotaJSON.put("ID da Rota", rota.getID());
+        rotaJSON.put("Edges", rota.getEdges());
+        return rotaJSON.toString();
+    }
+
+    // -> CLIENTE
+    // Car
+    public static Rota extraiRota(String rotaJSON) {
+        JSONObject rotaJSONObj = new JSONObject(rotaJSON);
+		Rota rota = new Rota(rotaJSONObj.getString("ID da Rota"), rotaJSONObj.getString("Edges"));
+        return rota;
+	}
+
 }

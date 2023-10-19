@@ -1,7 +1,5 @@
 package io.sim.company;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -35,8 +33,6 @@ public class Company extends Thread {
     private Account account;
     private int alphaBankServerPort;
     private String alphaBankServerHost; 
-    private DataInputStream entrada;
-    private DataOutputStream saida;
     
     public Company(ServerSocket serverSocket, String xmlPath, int _numDrivers, int _alphaBankServerPort, String _alphaBankServerHost) {
         // Inicializa servidor
@@ -66,9 +62,7 @@ public class Company extends Thread {
             System.out.println("Company iniciando...");
 
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
-            entrada = new DataInputStream(socket.getInputStream());
-			saida = new DataOutputStream(socket.getOutputStream());
-            this.account = Account.criaAccount("Company", 100000);
+            this.account = Account.criaAccount("Company", 1999999999);
             AlphaBank.adicionarAccount(account);
             account.start();
             System.out.println("Company se conectou ao Servido do AlphaBank!!");
@@ -79,7 +73,6 @@ public class Company extends Thread {
                     try {
                         sleep(500);
                     } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -126,7 +119,6 @@ public class Company extends Thread {
                 lista = (SumoStringList) _sumo.do_job_get(Vehicle.getIDList());
                 return lista.contains(_idCar);
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
             }

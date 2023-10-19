@@ -1,7 +1,7 @@
 package io.sim.driver;
 
 import io.sim.company.Rota;
-import io.sim.projeto.FuelStation;
+import io.sim.fuelStation.FuelStation;
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
@@ -36,7 +36,7 @@ public class Driver extends Thread {
         this.rotasDisp = new ArrayList<Rota>();
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
-        this.saldoInicial = 10000;
+        this.saldoInicial = 0;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
         this.postoCombustivel = _postoCombustivel;
@@ -69,7 +69,7 @@ public class Driver extends Thread {
                     initRoute = true; 
                 }
 
-                if (this.car.getNivelDoTanque() < 9000){
+                if (this.car.getNivelDoTanque() < 3000){
                     //this.car.setSpeed(0);
                     double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000;
                     double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo());
@@ -78,7 +78,6 @@ public class Driver extends Thread {
                     if (qtdML != 0) {
                         try {
                             System.out.println(driverID + " decidiu abastecer " + qtdML);
-                            this.car.preparaAbastecimento();
                             postoCombustivel.abastecerCarro(this.car, qtdML);
                             BotPayment bt = new BotPayment(socket, account.getAccountID(), account.getSenha(), postoCombustivel.getFSAccountID(), precoAPagar);
                             bt.start();

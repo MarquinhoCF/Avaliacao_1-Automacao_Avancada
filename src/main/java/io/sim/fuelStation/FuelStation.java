@@ -1,4 +1,4 @@
-package io.sim.projeto;
+package io.sim.fuelStation;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -80,13 +80,14 @@ public class FuelStation extends Thread {
 
     public void abastecerCarro(Car car, double litros) {
         try {
+            bombas.acquire(); // Tenta adquirir uma bomba de combustível
             boolean jaAbasteceu = false;
+            car.preparaAbastecimento();
             while (!jaAbasteceu) {
                 if (car.getSpeed() == 0) {
-                    bombas.acquire(); // Tenta adquirir uma bomba de combustível
                     System.out.println(car.getIdCar() + " está abastecendo no Posto de Gasolina");
-                    Thread.sleep(30000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
-                    car.abastecido();
+                    Thread.sleep(120000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
+                    car.abastecido(litros);
                     System.out.println(car.getIdCar() + " terminou de abastecer");
                     bombas.release(); // Libera a bomba de combustível
                     jaAbasteceu = true;

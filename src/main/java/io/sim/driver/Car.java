@@ -89,16 +89,14 @@ public class Car extends Vehicle implements Runnable {
 		this.carStatus = "aguardando";
 		this.drivingRepport = new ArrayList<DrivingData>();
 		
-		this.drivingDataAtual = new DrivingData(idCar, driverID, "aguardando", 0, 0, 0, 
-												0, 0, 0, 0, "", "", 
-												0, 0, 0, 1, this.fuelType,
-												this.fuelPrice,0, 0, this.personCapacity, this.personNumber);
+		this.drivingDataAtual = new DrivingData(idCar, driverID, "aguardando", 0, 0, 0, 0, 
+												0 , "", 0, 0, 0, this.fuelType, 0);
 	}
 
 	@Override
 	public void run() {
 		System.out.println(this.idCar + " iniciando");
-		AtualizaTanque at = new AtualizaTanque(this, 100);
+		AtualizaTanque at = new AtualizaTanque(this, 30);
 		at.start();
 
 		try {
@@ -111,9 +109,7 @@ public class Car extends Vehicle implements Runnable {
 			byte[] mensagemEncriptada;
 
 			while (!finalizado) {
-				// Recebendo Rota
 				// Manda "aguardando" da primeira vez
-				
 				mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 				saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 				saida.write(mensagemEncriptada);
@@ -121,7 +117,6 @@ public class Car extends Vehicle implements Runnable {
 				System.out.println(this.idCar + " aguardando rota");
 				numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
                 rota = JSONConverter.extraiRota(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
-				//rota = JSONConverter.extraiRota(AESencrypt.decripta(entrada.readAllBytes()));
 
 				if(rota.getID().equals("-1")) {
 					System.out.println(this.idCar +" - Sem rotas a receber.");
@@ -159,7 +154,6 @@ public class Car extends Vehicle implements Runnable {
 						mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 						saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 						saida.write(mensagemEncriptada);
-						//saida.write(AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual)));
 						this.on_off = false;
 						break;
 					} 
@@ -167,7 +161,7 @@ public class Car extends Vehicle implements Runnable {
 					Thread.sleep(this.acquisitionRate);
 					
 					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
-						System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
+						// System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
 						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
 						double[] coordGeo = calculaCoordGeograficas();
 						latAtual = coordGeo[0];
@@ -180,7 +174,6 @@ public class Car extends Vehicle implements Runnable {
 						mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 						saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 						saida.write(mensagemEncriptada);
-						//saida.write(AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual)));
 						
 						if(this.carStatus.equals("finalizado")) {
 							this.on_off = false;
@@ -193,7 +186,9 @@ public class Car extends Vehicle implements Runnable {
 				System.out.println(this.idCar + " off.");
 
 				if(!finalizado) {
-					this.carStatus = "aguardando";
+					if (carStatus != "abastecendo") {
+						this.carStatus = "aguardando";
+					}
 				}
 
 				if(finalizado) {
@@ -228,93 +223,26 @@ public class Car extends Vehicle implements Runnable {
 						this.idCar, this.driverID, this.carStatus, this.latInicial, this.lonInicial,
 						this.latAtual, this.lonAtual,
 						
-						System.currentTimeMillis(), sumoPosition2D.x, sumoPosition2D.y,
-						(String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)),
-						(String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)),
-						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)),
-						(double) this.sumo.do_job_get(Vehicle.getDistance(this.idCar)),
-
-						(double) this.sumo.do_job_get(Vehicle.getFuelConsumption(this.idCar)),
+						System.currentTimeMillis(), (String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)), 
+						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)), 
+						(double) sumo.do_job_get(Vehicle.getDistance(this.idCar)), // IMPORTANTE alterar para calculo
+						(double) this.sumo.do_job_get(Vehicle.getFuelConsumption(this.idCar)), this.fuelType,
+						(double) this.sumo.do_job_get(Vehicle.getCO2Emission(this.idCar)));
 						// Vehicle's fuel consumption in ml/s during this time step,
 						// to get the value for one step multiply with the step length; error value:
 						// -2^30
-						
-						1/*averageFuelConsumption (calcular)*/,
 
-						this.fuelType, this.fuelPrice,
-
-						(double) this.sumo.do_job_get(Vehicle.getCO2Emission(this.idCar)),
 						// Vehicle's CO2 emissions in mg/s during this time step,
 						// to get the value for one step multiply with the step length; error value:
 						// -2^30
-
-						(double) this.sumo.do_job_get(Vehicle.getHCEmission(this.idCar)),
-						// Vehicle's HC emissions in mg/s during this time step,
-						// to get the value for one step multiply with the step length; error value:
-						// -2^30
 						
-						this.personCapacity,
-						// the total number of persons that can ride in this vehicle
-						
-						this.personNumber
-						// the total number of persons which are riding in this vehicle
-
-				);
-
-				// Criar relat�rio auditoria / alertas
-				// velocidadePermitida = (double)
-				// sumo.do_job_get(Vehicle.getAllowedSpeed(this.idSumoVehicle));
+						// 1/*averageFuelConsumption (calcular)*/,
 
 				this.drivingRepport.add(drivingDataAtual);
-
-				//System.out.println("Data: " + this.drivingRepport.size());
-				// System.out.println("idCar = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getCarID());
-				//System.out.println(
-				//		"timestamp = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getTimeStamp());
-				//System.out.println("X=" + this.drivingRepport.get(this.drivingRepport.size() - 1).getX_Position() + ", "
-				//		+ "Y=" + this.drivingRepport.get(this.drivingRepport.size() - 1).getY_Position());
-				// System.out.println("speed = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getSpeed());
-				// System.out.println("odometer = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getOdometer());
-				// System.out.println("Fuel Consumption = "
-				// 		+ this.drivingRepport.get(this.drivingRepport.size() - 1).getFuelConsumption());
-				//System.out.println("Fuel Type = " + this.fuelType);
-				//System.out.println("Fuel Price = " + this.fuelPrice);
-
-				// System.out.println(
-				// 		"CO2 Emission = " + this.drivingRepport.get(this.drivingRepport.size() - 1).getCo2Emission());
-
-				//System.out.println();
-				//System.out.println("************************");
-				//System.out.println("testes: ");
-				//System.out.println("getAngle = " + (double) sumo.do_job_get(Vehicle.getAngle(this.idCar)));
-				//System.out
-				//		.println("getAllowedSpeed = " + (double) sumo.do_job_get(Vehicle.getAllowedSpeed(this.idCar)));
-				//System.out.println("getSpeed = " + (double) sumo.do_job_get(Vehicle.getSpeed(this.idCar)));
-				//System.out.println(
-				//		"getSpeedDeviation = " + (double) sumo.do_job_get(Vehicle.getSpeedDeviation(this.idCar)));
-				//System.out.println("getMaxSpeedLat = " + (double) sumo.do_job_get(Vehicle.getMaxSpeedLat(this.idCar)));
-				//System.out.println("getSlope = " + (double) sumo.do_job_get(Vehicle.getSlope(this.idCar))
-				//		+ " the slope at the current position of the vehicle in degrees");
-				//System.out.println(
-				//		"getSpeedWithoutTraCI = " + (double) sumo.do_job_get(Vehicle.getSpeedWithoutTraCI(this.idCar))
-				//				+ " Returns the speed that the vehicle would drive if no speed-influencing\r\n"
-				//				+ "command such as setSpeed or slowDown was given.");
-
-				//sumo.do_job_set(Vehicle.setSpeed(this.idCar, (1000 / 3.6)));
-				//double auxspeed = (double) sumo.do_job_get(Vehicle.getSpeed(this.idCar));
-				//System.out.println("new speed = " + (auxspeed * 3.6));
-				//System.out.println(
-				//		"getSpeedDeviation = " + (double) sumo.do_job_get(Vehicle.getSpeedDeviation(this.idCar)));
 				
 				if (carStatus != "abastecendo") {
-					this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
-					this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
+					this.setSpeed(speed);
 				}
-				
-				// System.out.println("getPersonNumber = " + sumo.do_job_get(Vehicle.getPersonNumber(this.idCar)));
-				//System.out.println("getPersonIDList = " + sumo.do_job_get(Vehicle.getPersonIDList(this.idCar)));
-				
-				// System.out.println("************************");
 
 			} else {
 				this.on_off = false;
@@ -406,12 +334,6 @@ public class Car extends Vehicle implements Runnable {
 		return this.maxFuelCapacity;
 	}
 
-	public void abastecido() throws Exception{
-		fuelTank = maxFuelCapacity;
-		carStatus = "rodando";
-		voltarAndar();
-	}
-
 	public SumoColor getColorCar() {
 		return this.colorCar;
 	}
@@ -436,23 +358,33 @@ public class Car extends Vehicle implements Runnable {
 		return this.personNumber;
 	}
 
-	public void voltarAndar() throws Exception {
-		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
-		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
-	}
+	// public void voltarAndar() throws Exception {
+	// 	this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
+	// 	this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
+	// }
 
 	public double getSpeed() throws Exception{
 		return (double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar));
 	}
 
-	public void pararCarro() throws Exception{
+	public void setSpeed(double speed) throws Exception {
 		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 0));
-		sumo.do_job_set(Vehicle.setSpeed(this.idCar, 0));
+		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
+	}
+
+	public void pararCarro() throws Exception{
+		setSpeed(0);
 	}
 
 	public void preparaAbastecimento() throws Exception{
 		carStatus = "abastecendo";
 		pararCarro();
+	}
+
+	public void abastecido(double litros) throws Exception{
+		fuelTank += litros;
+		carStatus = "rodando";
+		setSpeed(speed);
 	}
 
 	// Pega a última posição da Rota

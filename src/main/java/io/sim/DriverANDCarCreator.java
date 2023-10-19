@@ -2,7 +2,7 @@ package io.sim;
 
 import io.sim.driver.Car;
 import io.sim.driver.Driver;
-import io.sim.projeto.FuelStation;
+import io.sim.fuelStation.FuelStation;
 import it.polito.appeal.traci.SumoTraciConnection;
 
 import java.util.ArrayList;
