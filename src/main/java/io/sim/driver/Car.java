@@ -82,7 +82,7 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 100;
+		this.speed = 50;
 		this.rota = null;
 		this.fuelTank = 10000;
 		this.maxFuelCapacity = 55000;
@@ -96,7 +96,7 @@ public class Car extends Vehicle implements Runnable {
 	@Override
 	public void run() {
 		System.out.println(this.idCar + " iniciando");
-		AtualizaTanque at = new AtualizaTanque(this, 30);
+		AtualizaTanque at = new AtualizaTanque(this);
 		at.start();
 
 		try {
@@ -163,7 +163,7 @@ public class Car extends Vehicle implements Runnable {
 					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						// System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
 						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
-						double[] coordGeo = calculaCoordGeograficas();
+						double[] coordGeo = calculaCoordGeograficas(); // BOzaço aqui IMPORTANTE TRATAR ISSO
 						latAtual = coordGeo[0];
 						lonAtual = coordGeo[1];
 						atualizaSensores();
@@ -210,8 +210,6 @@ public class Car extends Vehicle implements Runnable {
 	private void atualizaSensores() {
 		try {
 			if (!this.getSumo().isClosed()) {
-				SumoPosition2D sumoPosition2D;
-				sumoPosition2D = (SumoPosition2D) sumo.do_job_get(Vehicle.getPosition(this.idCar));
 
 				// System.out.println("CarID: " + this.getIdCar());
 				// System.out.println("RoadID: " + (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)));
@@ -313,6 +311,10 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 	}
 
+	public double getConsumoCombustivel() {
+		return drivingDataAtual.getFuelConsumption();
+	}
+
 	public void gastaCombustivel(double litros) {
 		if (fuelTank >= litros) {
 			fuelTank -= litros;
@@ -357,11 +359,6 @@ public class Car extends Vehicle implements Runnable {
 	public int getPersonNumber() {
 		return this.personNumber;
 	}
-
-	// public void voltarAndar() throws Exception {
-	// 	this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
-	// 	this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 31));
-	// }
 
 	public double getSpeed() throws Exception{
 		return (double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar));
@@ -413,7 +410,7 @@ public class Car extends Vehicle implements Runnable {
 	}
 
 	private double[] calculaCoordGeograficas() throws Exception {
-		SumoPosition2D sumoPosition2D = (SumoPosition2D) sumo.do_job_get(Vehicle.getPosition(this.idCar));
+		SumoPosition2D sumoPosition2D = (SumoPosition2D) sumo.do_job_get(Vehicle.getPosition(this.idCar)); // BOzaço aqui IMPORTANTE TRATAR ISSO
 
 		double x = sumoPosition2D.x; // coordenada X em metros
 		double y = sumoPosition2D.y; // coordenada Y em metros

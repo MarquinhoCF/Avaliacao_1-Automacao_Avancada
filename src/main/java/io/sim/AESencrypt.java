@@ -7,8 +7,8 @@ import javax.crypto.spec.SecretKeySpec;
 public class AESencrypt {
 
     private static final String chaveEncriptacao = "9876543210abcdef";
-    private static String IV = "AAAAAAAAAAAAAAAA";
-    private static int tamNumBytes = 32;
+    private static final String IV = "AAAAAAAAAAAAAAAA";
+    private static final int tamNumBytes = 32;
 
     public AESencrypt() {
 
