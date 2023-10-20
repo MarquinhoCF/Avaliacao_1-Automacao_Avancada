@@ -67,6 +67,7 @@ public class EnvSimulator extends Thread {
 
 			// Roda o metodo join em todos os Drivers, espera todos os drivers terminarem a execução
 			ArrayList<Driver> drivers = DriverANDCarCreator.criaListaDrivers(numDrivers, fuelStation, taxaAquisicao, sumo, host, portaCompany, portaAlphaBank);
+			ExcelReport.criaPlanilhas(company, drivers, fuelStation);
 			for(int i = 0; i < drivers.size(); i++) {
 				drivers.get(i).start();
 				Thread.sleep(500);

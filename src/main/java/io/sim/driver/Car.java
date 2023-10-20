@@ -235,7 +235,7 @@ public class Car extends Vehicle implements Runnable {
 						// -2^30
 						
 						// 1/*averageFuelConsumption (calcular)*/,
-
+						
 				this.drivingRepport.add(drivingDataAtual);
 				
 				if (carStatus != "abastecendo") {

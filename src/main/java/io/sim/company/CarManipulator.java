@@ -46,7 +46,9 @@ public class CarManipulator extends Thread {
                 // System.out.println("Aguardando mensagem...");
                 numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
                 DrivingData comunicacao = JSONConverter.extraiDrivingData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
-                
+
+                company.addComunicacao(comunicacao);
+
                 StatusDoCarro = comunicacao.getCarStatus(); // lê solicitacao do cliente
                 
                 double latInicial = comunicacao.getLatInicial();
@@ -78,12 +80,6 @@ public class CarManipulator extends Thread {
                         mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(resposta));
 				        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 				        saida.write(mensagemEncriptada);
-                        // synchronized (sincroniza) {
-                        //     Rota resposta = company.executarRota();
-                        //     mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(resposta));
-				        //     saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
-				        //     saida.write(mensagemEncriptada);
-                        // }
                     }
                 } else if(StatusDoCarro.equals("finalizado")) {
                     String routeID = comunicacao.getRouteIDSUMO();

@@ -26,13 +26,19 @@ public class AlphaBank extends Thread {
     public void run() {
         try {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
-            
+            boolean primeiraVez = true;
             while (true) {
                 Socket clientSocket = serverAlphaBank.accept();
                 System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
 
                 AccountManipulator accountManipulator = new AccountManipulator(clientSocket, this);
                 accountManipulator.start();
+
+                if (primeiraVez) {
+                    AlphaBankAttExcel attExcel = new AlphaBankAttExcel(this);
+                    attExcel.start();
+                    primeiraVez = false;
+                }
             }
             //System.out.println("Encerrando AlphaBank");
         } catch (IOException e) {
@@ -84,7 +90,7 @@ public class AlphaBank extends Thread {
         }
     }
 
-    private static Account getAccountPeloID(String accountID) {
+    private Account getAccountPeloID(String accountID) {
         for (Account account : accounts) {
             if (account.getAccountID().equals(accountID)) {
                 return account;
@@ -103,25 +109,19 @@ public class AlphaBank extends Thread {
         registrosPendentes.add(registerReceb);
     }
 
-    public static int numeroDeRegistrosPend() {
-        synchronized (AlphaBank.class) {
-            if (registrosPendentes != null) {
-                return registrosPendentes.size();
-            }
-            return 0;
-        }
+    public boolean temRegistro() {
+        return !registrosPendentes.isEmpty();
     }
 
-    public static TransferData pegarRegistro(String accountID) {
-        synchronized (AlphaBank.class) {
-            if (registrosPendentes != null) {
-                for (int i = 0; i < registrosPendentes.size(); i++) {
-                    if (accountID.equals(registrosPendentes.get(i).getAccountID())) {
-                        return registrosPendentes.remove(i);
-                    }
-                }
+    public TransferData pegaRegistro() {
+        return registrosPendentes.remove(0);
+    }
+
+    public void mandaRegistroAcc(TransferData data) {
+        for (Account account : accounts) {
+            if (account.getAccountID().equals(data.getAccountID())) {
+                account.addHistorico(data);
             }
-            return null;
         }
     }
 }

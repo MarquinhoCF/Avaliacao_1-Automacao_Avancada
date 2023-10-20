@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Vehicle;
 import de.tudresden.sumo.objects.SumoStringList;
-
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
+import io.sim.driver.DrivingData;
 
 public class Company extends Thread {
     // Atributos de Servidor
@@ -27,6 +27,7 @@ public class Company extends Thread {
     private static ArrayList<Rota> rotasTerminadas;
     private static double preco;
     private static int numDrivers;
+    private static ArrayList<DrivingData> carReports;
 
     // Atributos como cliente de AlphaBank
     private Socket socket;
@@ -50,6 +51,7 @@ public class Company extends Thread {
         rotasTerminadas = new ArrayList<Rota>();
         preco = 3.25;
         numDrivers = _numDrivers;
+        carReports = new ArrayList<DrivingData>();
 
         // Atributos como cliente de AlphaBank
         alphaBankServerPort = _alphaBankServerPort;
@@ -94,6 +96,12 @@ public class Company extends Thread {
                         // Cria uma thread para comunicacao de cada Car
                         CarManipulator carManipulator = new CarManipulator(socket, this);
                         carManipulator.start();
+
+                        if (i == 0) {
+                            CompanyAttExcel attExcel = new CompanyAttExcel(this);
+                            attExcel.start();
+                        }
+
                     }
                     System.out.println("Company: Todos os drivers criados");
                     canectandoCars = false;
@@ -108,8 +116,24 @@ public class Company extends Thread {
         System.out.println("Encerrando a Company...");
     }
 
+    public String getAccountID() {
+        return account.getAccountID();
+    }
+
     public static boolean temRotasDisponiveis() {
         return rotasDisponiveis;
+    }
+
+    public synchronized void addComunicacao(DrivingData comunicacao) {
+        carReports.add(comunicacao);
+    }
+
+    public boolean temReport() {
+        return !carReports.isEmpty();
+    }
+
+    public DrivingData pegaComunicacao() {
+        return carReports.remove(0);
     }
 
     public static boolean estaNoSUMO(String _idCar, SumoTraciConnection _sumo) {

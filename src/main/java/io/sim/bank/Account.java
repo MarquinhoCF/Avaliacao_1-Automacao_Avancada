@@ -23,20 +23,12 @@ public class Account extends Thread {
     @Override
     public void run() {
         System.out.println("Account: " + accountID + " iniciando...");
-        // Sempre que tiver uma operação withdraw ou deposit criar uma transaction e guardar
-        try {
-            while (true) {
-                if (AlphaBank.numeroDeRegistrosPend() != 0) {
-                    Thread.sleep(500);
-                    TransferData register = AlphaBank.pegarRegistro(accountID);
-                    if (register != null) {
-                        historico.add(register);
-                        System.out.println(register.getDescricao());
-                    }
-                }
+        int i = 0;
+        while (true) {
+            if (!historico.isEmpty()) {
+                System.out.println(historico.get(i).getDescricao());
+                i++;
             }
-        } catch (InterruptedException e) {
-                e.printStackTrace();
         }
     }
 
@@ -54,6 +46,10 @@ public class Account extends Thread {
 
     public void setBalance(double _saldo) {
         this.saldo = _saldo;
+    }
+
+    public void addHistorico(TransferData data) {
+        historico.add(data);
     }
 
     public void deposito(double quantia) {

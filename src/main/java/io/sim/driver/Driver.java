@@ -100,4 +100,12 @@ public class Driver extends Thread {
             e.printStackTrace();
         }
     }
+
+    public String getID() {
+        return driverID;
+    }
+
+    public String getCarID() {
+        return this.car.getIdCar();
+    }
 }
