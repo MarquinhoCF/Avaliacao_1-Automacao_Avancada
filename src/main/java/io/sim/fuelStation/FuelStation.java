@@ -40,9 +40,9 @@ public class FuelStation extends Thread {
             System.out.println("Fuel Station se conectou ao Servido do AlphaBank!!");
 
             while (true) {
-                
+                Thread.sleep(15000);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("Encerrando a Fuel Station...");

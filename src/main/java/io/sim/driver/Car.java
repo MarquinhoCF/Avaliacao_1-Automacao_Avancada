@@ -82,7 +82,7 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 50;
+		this.speed = 40;
 		this.rota = null;
 		this.fuelTank = 10000;
 		this.maxFuelCapacity = 55000;

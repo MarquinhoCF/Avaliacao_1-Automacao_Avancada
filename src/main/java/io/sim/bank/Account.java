@@ -22,13 +22,18 @@ public class Account extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Account: " + accountID + " iniciando...");
-        int i = 0;
-        while (true) {
-            if (!historico.isEmpty()) {
-                System.out.println(historico.get(i).getDescricao());
-                i++;
+        try {
+            System.out.println("Account: " + accountID + " iniciando...");
+            int i = 0;
+            while (true) {
+                Thread.sleep(2000);
+                if (!historico.isEmpty()) {
+                    System.out.println(historico.get(i).getDescricao());
+                    i++;
+                }
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
