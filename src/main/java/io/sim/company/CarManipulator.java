@@ -5,8 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import io.sim.AESencrypt;
-import io.sim.JSONConverter;
+import io.sim.comunication.AESencrypt;
+import io.sim.comunication.JSONConverter;
 import io.sim.driver.DrivingData;
 
 public class CarManipulator extends Thread {
@@ -58,12 +58,14 @@ public class CarManipulator extends Thread {
 
                 double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
 
-                System.out.println(comunicacao.getCarID() + " percorreu " + distancia + " metros");
+                // System.out.println(comunicacao.getCarID() + " percorreu " + distancia + " metros");
 		        if (distancia > (distanciaPercorrida + 1000)) {
-			        distanciaPercorrida += 1000;
+                    distanciaPercorrida = (Math.floor(distancia/1000))*1000;
                     String driverID = comunicacao.getDriverID();
                     company.fazerPagamento(driverID);
 		        }
+
+                comunicacao.setDistance(distanciaPercorrida/1000);
                 
                 if (StatusDoCarro.equals("aguardando")) {
                     if(!Company.temRotasDisponiveis()) {

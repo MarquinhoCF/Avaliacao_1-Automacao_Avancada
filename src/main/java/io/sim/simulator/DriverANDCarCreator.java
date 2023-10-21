@@ -1,4 +1,4 @@
-package io.sim;
+package io.sim.simulator;
 
 import io.sim.driver.Car;
 import io.sim.driver.Driver;

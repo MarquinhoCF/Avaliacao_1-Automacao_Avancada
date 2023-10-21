@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import org.python.modules.synchronize;
+
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Vehicle;
 import de.tudresden.sumo.objects.SumoStringList;
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
+import io.sim.bank.EndAccount;
+import io.sim.comunication.JSONConverter;
 import io.sim.driver.DrivingData;
 
 public class Company extends Thread {
@@ -107,13 +112,15 @@ public class Company extends Thread {
                     canectandoCars = false;
                 }
 
-                System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
+                //System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
         }
         catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("Encerrando a Company...");
+        EndAccount endAccount = new EndAccount(socket, account);
+        endAccount.start();
     }
 
     public String getAccountID() {
@@ -152,9 +159,14 @@ public class Company extends Thread {
     // Libera uma rota para o cliente que a solicitou. Para isso, remove de "rotasDisp" e adiciona em "rotasEmExec"
     public Rota executarRota() {
         synchronized (sincroniza) {
-            Rota rota = rotasDisp.remove(0);
-            rotasEmExec.add(rota);
-            return rota;
+            if(rotasDisponiveis) {
+                Rota rota = rotasDisp.remove(0);
+                rotasEmExec.add(rota);
+                return rota;
+            } else {
+                Rota rota = new Rota("-1", "00000");
+                return rota;
+            }
         }
     }
 
@@ -169,7 +181,7 @@ public class Company extends Thread {
         }
     }
 
-    public void fazerPagamento(String driverID) throws IOException {
+    public synchronized void fazerPagamento(String driverID) throws IOException {
         BotPayment bt = new BotPayment(socket, account.getAccountID(),  account.getSenha(), driverID, preco);
         bt.start();
     }

@@ -27,9 +27,8 @@ public class AlphaBank extends Thread {
         try {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
             boolean primeiraVez = true;
-            while (true) {
+            while (!accounts.isEmpty() || primeiraVez) {
                 Socket clientSocket = serverAlphaBank.accept();
-                System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
 
                 AccountManipulator accountManipulator = new AccountManipulator(clientSocket, this);
                 accountManipulator.start();
@@ -40,7 +39,7 @@ public class AlphaBank extends Thread {
                     primeiraVez = false;
                 }
             }
-            //System.out.println("Encerrando AlphaBank");
+            System.out.println("Encerrando AlphaBank");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,6 +51,16 @@ public class AlphaBank extends Thread {
                 accounts.add(conta);
             } else {
                 System.out.println("Adicao de conta mal sucedida: AlphaBank não foi iniciado ainda");
+            }
+        }
+    }
+
+    public void removerAccount(String accountID) {
+        synchronized (AlphaBank.class) {
+            for (int i = 0; i < accounts.size(); i++) {
+                if (accounts.get(i).getAccountID().equals(accountID)) {
+                    accounts.remove(i);
+                }
             }
         }
     }
@@ -101,11 +110,15 @@ public class AlphaBank extends Thread {
 
     public void adicionaRegistros(TransferData registerPag) {
         registerPag.setTimestamp();
-        registerPag.setAccountID(registerPag.getPagador());
+        Account conta = getAccountPeloID(registerPag.getPagador());
+        registerPag.setAccountID(conta.getAccountID());
+        registerPag.setSaldoAtual(conta.getSaldo());
         registrosPendentes.add(registerPag);
         TransferData registerReceb = new TransferData(registerPag.getPagador(), "Recebimento", registerPag.getRecebedor(), registerPag.getQuantia());
         registerReceb.setTimestamp();
-        registerReceb.setAccountID(registerPag.getRecebedor());
+        conta = getAccountPeloID(registerPag.getRecebedor());
+        registerReceb.setAccountID(conta.getAccountID());
+        registerReceb.setSaldoAtual(conta.getSaldo());
         registrosPendentes.add(registerReceb);
     }
 

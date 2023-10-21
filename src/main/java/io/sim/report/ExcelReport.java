@@ -1,4 +1,4 @@
-package io.sim;
+package io.sim.report;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -116,6 +116,7 @@ public class ExcelReport {
         headerRow.createCell(3).setCellValue("Recebedor");
         headerRow.createCell(4).setCellValue("Valor");
         headerRow.createCell(5).setCellValue("Timestamp");
+        headerRow.createCell(6).setCellValue("Saldo Atual");
     }
 
     public static void atualizaPlanilhaAccount(TransferData transferData) {
@@ -136,6 +137,7 @@ public class ExcelReport {
                 newRow.createCell(3).setCellValue(transferData.getRecebedor());
                 newRow.createCell(4).setCellValue(transferData.getQuantia()); 
                 newRow.createCell(5).setCellValue(transferData.getTimestamp());
+                newRow.createCell(6).setCellValue(transferData.getSaldoAtual());
                 
                 // Salve as alterações na planilha
                 workbook.write(outputStream);

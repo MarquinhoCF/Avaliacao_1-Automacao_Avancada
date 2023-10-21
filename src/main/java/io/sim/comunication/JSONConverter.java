@@ -1,4 +1,4 @@
-package io.sim;
+package io.sim.comunication;
 
 import org.json.JSONObject;
 

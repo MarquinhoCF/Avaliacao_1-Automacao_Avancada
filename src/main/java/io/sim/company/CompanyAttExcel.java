@@ -1,6 +1,6 @@
 package io.sim.company;
 
-import io.sim.ExcelReport;
+import io.sim.report.ExcelReport;
 
 public class CompanyAttExcel extends Thread{
     Company company;

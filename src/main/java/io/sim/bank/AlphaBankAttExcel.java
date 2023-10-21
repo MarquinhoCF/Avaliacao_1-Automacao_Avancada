@@ -1,6 +1,6 @@
 package io.sim.bank;
 
-import io.sim.ExcelReport;
+import io.sim.report.ExcelReport;
 
 public class AlphaBankAttExcel extends Thread {
     AlphaBank alphaBank;

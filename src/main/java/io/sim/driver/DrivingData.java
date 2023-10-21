@@ -96,8 +96,16 @@ public class DrivingData {
 		return distance;
 	}
 
+	public void setDistance(double _distance) {
+		distance = _distance;
+	}
+
 	public double getFuelConsumption() {
 		return fuelConsumption;
+	}
+
+	public void setFuelConsumption(double _fuelConsumption) {
+		fuelConsumption = _fuelConsumption;
 	}
 
 	public int getFuelType() {

@@ -5,6 +5,7 @@ import io.sim.fuelStation.FuelStation;
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
+import io.sim.bank.EndAccount;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -36,7 +37,7 @@ public class Driver extends Thread {
         this.rotasDisp = new ArrayList<Rota>();
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
-        this.saldoInicial = 0;
+        this.saldoInicial = 200;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
         this.postoCombustivel = _postoCombustivel;
@@ -69,7 +70,7 @@ public class Driver extends Thread {
                     initRoute = true; 
                 }
 
-                if (this.car.getNivelDoTanque() < 3000){
+                if (this.car.getNivelDoTanque() < 9000){
                     //this.car.setSpeed(0);
                     double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000;
                     double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo());
@@ -89,11 +90,11 @@ public class Driver extends Thread {
                     }
                 }
 
-                System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
-            car.setFinalizado(true);  
+            car.setFinalizado(true);
             System.out.println("Encerrando " + driverID);
-            // this.car.join();
+            EndAccount endAccount = new EndAccount(socket, account);
+            endAccount.start();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {

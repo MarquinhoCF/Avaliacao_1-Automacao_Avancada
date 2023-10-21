@@ -9,6 +9,7 @@ public class TransferData {
     private String recebedor;
     private double quantia;
     private Timestamp timestamp;
+    private double saldoAtual;
 
     public TransferData(String _pagador, String _operacao, String _recebedor, double _quantia) {
         this.pagador = _pagador;
@@ -47,6 +48,14 @@ public class TransferData {
 
     public Timestamp getTimestamp() {
         return timestamp;
+    }
+
+    public void setSaldoAtual(double novoSaldo) {
+        saldoAtual = novoSaldo;
+    }
+
+    public double getSaldoAtual() {
+        return saldoAtual;
     }
 
     public String getDescricao() {

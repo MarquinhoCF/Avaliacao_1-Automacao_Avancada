@@ -6,6 +6,8 @@ import java.util.concurrent.Semaphore;
 
 import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
+import io.sim.bank.EndAccount;
+import io.sim.company.Company;
 import io.sim.driver.Car;
 
 public class FuelStation extends Thread {
@@ -39,13 +41,15 @@ public class FuelStation extends Thread {
             account.start();
             System.out.println("Fuel Station se conectou ao Servido do AlphaBank!!");
 
-            while (true) {
+            while (Company.temRotasDisponiveis()) {
                 Thread.sleep(15000);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("Encerrando a Fuel Station...");
+        EndAccount endAccount = new EndAccount(socket, account);
+        endAccount.start();
     }
 
     public String getFSAccountID() {
@@ -86,7 +90,7 @@ public class FuelStation extends Thread {
             while (!jaAbasteceu) {
                 if (car.getSpeed() == 0) {
                     System.out.println(car.getIdCar() + " está abastecendo no Posto de Gasolina");
-                    Thread.sleep(120000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
+                    Thread.sleep(20000); // Tempo de abastecimento de 2 minutos (120000 em milissegundos)
                     car.abastecido(litros);
                     System.out.println(car.getIdCar() + " terminou de abastecer");
                     bombas.release(); // Libera a bomba de combustível

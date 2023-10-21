@@ -11,8 +11,8 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import de.tudresden.sumo.objects.SumoStringList;
-import io.sim.AESencrypt;
-import io.sim.JSONConverter;
+import io.sim.comunication.AESencrypt;
+import io.sim.comunication.JSONConverter;
 import io.sim.company.Company;
 import io.sim.company.Rota;
 
@@ -44,11 +44,13 @@ public class Car extends Vehicle implements Runnable {
 	private Rota rota;
 	private double fuelTank;
 	private double maxFuelCapacity;
+	private double consumoCombustivel;
 	private String carStatus;
 	private double latInicial;
 	private double lonInicial;
 	private double latAtual;
 	private double lonAtual;
+	private double distanciaPercorrida;
 	private DrivingData drivingDataAtual;
 	private ArrayList<DrivingData> drivingRepport; // dados de conducao do veiculo
 	private TransportService ts;
@@ -82,10 +84,12 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 		this.personCapacity = _personCapacity;
 		this.personNumber = _personNumber;
-		this.speed = 40;
+		this.speed = 20;
 		this.rota = null;
 		this.fuelTank = 10000;
+		this.consumoCombustivel = 0;
 		this.maxFuelCapacity = 55000;
+		this.distanciaPercorrida = 0;
 		this.carStatus = "aguardando";
 		this.drivingRepport = new ArrayList<DrivingData>();
 		
@@ -162,10 +166,7 @@ public class Car extends Vehicle implements Runnable {
 					
 					if(!verificaRotaTerminada(edgeAtual, edgeFinal)) {
 						// System.out.println(this.idCar + " -> edge atual: " + edgeAtual);
-						System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
-						double[] coordGeo = calculaCoordGeograficas(); // BOzaço aqui IMPORTANTE TRATAR ISSO
-						latAtual = coordGeo[0];
-						lonAtual = coordGeo[1];
+						// System.out.println(this.idCar + " -> fuelTank: " + fuelTank);
 						atualizaSensores();
 						if (carStatus != "abastecendo") {
 							this.carStatus = "rodando";
@@ -210,6 +211,9 @@ public class Car extends Vehicle implements Runnable {
 	private void atualizaSensores() {
 		try {
 			if (!this.getSumo().isClosed()) {
+				double[] coordGeo = calculaCoordGeograficas();
+				latAtual = coordGeo[0];
+				lonAtual = coordGeo[1];
 
 				// System.out.println("CarID: " + this.getIdCar());
 				// System.out.println("RoadID: " + (String) this.sumo.do_job_get(Vehicle.getRoadID(this.idCar)));
@@ -223,8 +227,8 @@ public class Car extends Vehicle implements Runnable {
 						
 						System.currentTimeMillis(), (String) this.sumo.do_job_get(Vehicle.getRouteID(this.idCar)), 
 						(double) this.sumo.do_job_get(Vehicle.getSpeed(this.idCar)), 
-						(double) sumo.do_job_get(Vehicle.getDistance(this.idCar)), // IMPORTANTE alterar para calculo
-						(double) this.sumo.do_job_get(Vehicle.getFuelConsumption(this.idCar)), this.fuelType,
+						0, // CarManipulator faz o Calculo e o seta
+						this.consumoCombustivel, this.fuelType,
 						(double) this.sumo.do_job_get(Vehicle.getCO2Emission(this.idCar)));
 						// Vehicle's fuel consumption in ml/s during this time step,
 						// to get the value for one step multiply with the step length; error value:
@@ -311,21 +315,22 @@ public class Car extends Vehicle implements Runnable {
 		this.fuelPrice = _fuelPrice;
 	}
 
-	public double getConsumoCombustivel() {
-		return drivingDataAtual.getFuelConsumption();
+	public void setConsumoCombustivel(double _consumoCombustivel) {
+		consumoCombustivel = _consumoCombustivel;
 	}
 
 	public void gastaCombustivel(double litros) {
 		if (fuelTank >= litros) {
 			fuelTank -= litros;
+			setConsumoCombustivel(litros);
 		} else {
 			try {
 				pararCarro();
+				setConsumoCombustivel(0);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		
 	}
 
 	public double getNivelDoTanque() {
@@ -365,7 +370,7 @@ public class Car extends Vehicle implements Runnable {
 	}
 
 	public void setSpeed(double speed) throws Exception {
-		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 0));
+		this.sumo.do_job_set(Vehicle.setSpeedMode(this.idCar, 2));
 		this.sumo.do_job_set(Vehicle.setSpeed(this.idCar, speed));
 	}
 

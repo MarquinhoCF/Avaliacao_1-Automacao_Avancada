@@ -8,6 +8,7 @@ public class Account extends Thread {
     private String senha;
     private double saldo;
     private ArrayList<TransferData> historico;
+    private boolean funcionando;
 
     // Atributos de sincronização
     private Object sincroniza;
@@ -17,6 +18,7 @@ public class Account extends Thread {
         this.senha = _senha;
         this.saldo = _saldo;
         this.historico = new ArrayList<TransferData>();
+        this.funcionando = true;
         this.sincroniza = new Object();
     }
 
@@ -25,7 +27,7 @@ public class Account extends Thread {
         try {
             System.out.println("Account: " + accountID + " iniciando...");
             int i = 0;
-            while (true) {
+            while (funcionando) {
                 Thread.sleep(2000);
                 if (!historico.isEmpty()) {
                     System.out.println(historico.get(i).getDescricao());
@@ -55,6 +57,10 @@ public class Account extends Thread {
 
     public void addHistorico(TransferData data) {
         historico.add(data);
+    }
+
+    public void setFuncionando(boolean _funcionando) {
+        funcionando = _funcionando;
     }
 
     public void deposito(double quantia) {

@@ -5,8 +5,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
-import io.sim.AESencrypt;
-import io.sim.JSONConverter;
+import io.sim.comunication.AESencrypt;
+import io.sim.comunication.JSONConverter;
 
 public class AccountManipulator extends Thread {
 
@@ -37,13 +37,12 @@ public class AccountManipulator extends Thread {
                     System.out.println(login[0] + " FEZ O LOGIN");
                     numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
                     TransferData tf = JSONConverter.extraiTransferData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
-                    System.out.println("Leu as informações de Operacao!!");
                     String operacao = tf.getOperacao();
                     switch (operacao) {
                         case "Pagamento":
                             String recebedorID = tf.getRecebedor();
                             double quantia = tf.getQuantia();
-                        System.out.println(recebedorID + " VAI RECEBER R$" + quantia);
+                             System.out.println(recebedorID + " VAI RECEBER R$" + quantia);
                             if (alphaBank.transferencia(login[0], recebedorID, quantia)) {
                                 mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaRespostaTransferencia(true));
                                 saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
@@ -54,14 +53,19 @@ public class AccountManipulator extends Thread {
                                 saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
                                 saida.write(mensagemEncriptada);
                             }
-                            
                             break;
+
                         case "Sair":
                             sair = true;
+                            String accountID = tf.getAccountID();
+                            alphaBank.removerAccount(accountID);
+                            System.out.println("Conta de " + accountID + " foi removida!!");
                             break;
+
                         default:
                             break;
                     }
+
                 } else {
                     System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + login[0]);
                 }

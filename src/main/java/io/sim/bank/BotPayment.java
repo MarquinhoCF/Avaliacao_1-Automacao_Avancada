@@ -5,8 +5,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import io.sim.AESencrypt;
-import io.sim.JSONConverter;
+import io.sim.comunication.AESencrypt;
+import io.sim.comunication.JSONConverter;
 
 public class BotPayment extends Thread {
     private Socket socket;
@@ -53,6 +53,7 @@ public class BotPayment extends Thread {
             } else {
                 System.out.println("Transferência falhou.");
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {

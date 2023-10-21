@@ -1,4 +1,4 @@
-package io.sim;
+package io.sim.simulator;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import io.sim.driver.Driver;
 import io.sim.fuelStation.FuelStation;
+import io.sim.report.ExcelReport;
 import io.sim.bank.AlphaBank;
 import io.sim.company.Company;
 import it.polito.appeal.traci.SumoTraciConnection;
@@ -35,7 +36,7 @@ public class EnvSimulator extends Thread {
 		portaSUMO = 12345;
 		portaCompany = 23415;
 		portaAlphaBank = 54321;
-		taxaAquisicao = 500;
+		taxaAquisicao = 300;
 		numDrivers = 100;
 		rotasXML = "data/dados.xml";
 	}

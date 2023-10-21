@@ -1,4 +1,4 @@
-package io.sim;
+package io.sim.simulator;
 
 import it.polito.appeal.traci.SumoTraciConnection;
 
@@ -20,7 +20,6 @@ public class ExecutaSimulador extends Thread {
                 this.sumo.do_timestep();
                 sleep(taxaAquisicao);
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 break;
             }
