@@ -9,12 +9,17 @@ import io.sim.comunication.AESencrypt;
 import io.sim.comunication.JSONConverter;
 import io.sim.driver.DrivingData;
 
+/**
+ *      A classe CarManipulator é responsável por manipular a comunicação com carros que estão realizando rotas o código analisa 
+ * comportamento do carro e processa as informações que chegam. A classe monitora o status do carro, calcula a distância percorrida, 
+ * faz pagamentos, atribui rotas e lida com os diferentes estados do carro, como "esperando", "finalizado", "rodando" e "abastecendo". 
+ */
 public class CarManipulator extends Thread {
-    private Socket carSocket;
-    private DataInputStream entrada;
-    private DataOutputStream saida;
+    private Socket carSocket;      // O socket para comunicação com o carro
+    private DataInputStream entrada;  // Stream de entrada para receber dados do carro
+    private DataOutputStream saida;  // Stream de saída para enviar dados para o carro
 
-    private Company company;
+    private Company company;  // Referência à empresa que gerencia as rotas
 
     // Atributos para sincronização
     //private Object sincroniza = new Object();
@@ -23,7 +28,7 @@ public class CarManipulator extends Thread {
         this.company = _company;
         this.carSocket = _carSocket;
         try {
-            // variaveis de entrada e saida do servidor
+            // Variáveis de entrada e saída do servidor
             entrada = new DataInputStream(carSocket.getInputStream());
             saida = new DataOutputStream(carSocket.getOutputStream());
         } catch (IOException e) {
@@ -37,67 +42,84 @@ public class CarManipulator extends Thread {
     public void run() {
         try {
             String StatusDoCarro = "";
+            double distancia = 0;
             double distanciaPercorrida = 0;
             int numBytesMsg;
             byte[] mensagemEncriptada;
 
-            // loop principal
-            while(!StatusDoCarro.equals("encerrado")) {
-                // System.out.println("Aguardando mensagem...");
+            // Loop principal para interagir com o carro
+            while (!StatusDoCarro.equals("encerrado")) {
                 numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
                 DrivingData comunicacao = JSONConverter.extraiDrivingData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
 
-                company.addComunicacao(comunicacao);
+                company.addComunicacao(comunicacao); // Adiciona a informação na lista de espera para atualização da planilha Excel
 
-                StatusDoCarro = comunicacao.getCarStatus(); // lê solicitacao do cliente
-                
-                double latInicial = comunicacao.getLatInicial();
-                double lonInicial = comunicacao.getLonInicial();
+                StatusDoCarro = comunicacao.getCarStatus();  // Lê o status do carro
+
+                // Lê as informações sobre latitude e longitude
+                double latInicial = comunicacao.getLatAnt();
+                double lonInicial = comunicacao.getLonAnt();
                 double latAtual = comunicacao.getLatAtual();
                 double lonAtual = comunicacao.getLonAtual();
 
-                double distancia = calculaDistancia(latInicial, lonInicial, latAtual, lonAtual);
+                // Calcula a distância a partir das latitude e longitude iniciais e atuais
+                distancia = atualizaDistancia(distancia, latInicial, lonInicial, latAtual, lonAtual);
 
+                // Verifica se o carro percorreu 1 Km adicionaL
                 // System.out.println(comunicacao.getCarID() + " percorreu " + distancia + " metros");
-		        if (distancia > (distanciaPercorrida + 1000)) {
-                    distanciaPercorrida = (Math.floor(distancia/1000))*1000;
+                if (distancia > (distanciaPercorrida + 1000)) {
+                    distanciaPercorrida = (Math.floor(distancia / 1000)) * 1000; // Atualiza distânciaPercorrida
                     String driverID = comunicacao.getDriverID();
-                    company.fazerPagamento(driverID);
-		        }
+                    company.fazerPagamento(driverID); // Chama o método que contrói um BotPayment na classe Company
+                }
 
-                comunicacao.setDistance(distanciaPercorrida/1000);
-                
-                if (StatusDoCarro.equals("aguardando")) {
-                    if(!Company.temRotasDisponiveis()) {
+                // Atualiza as informações recebidas do cliente
+                comunicacao.setDistance(distanciaPercorrida / 1000);
+
+                // Estado "esperando", nesse estado o carro espera receber uma rota do servidor
+                if (StatusDoCarro.equals("esperando")) {
+                    // Caso não tenha mais nenhuma rota no vetor de rotas disponíveis da Company
+                    // O CarManipulator cria uma rota com informações incoerentes para avisar o Car que as rotas terminaram
+                    if (!Company.temRotasDisponiveis()) {
                         System.out.println("SMC - Sem mais rotas para liberar.");
                         Rota rota = new Rota("-1", "00000");
                         mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(rota));
-				        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
-				        saida.write(mensagemEncriptada);
+                        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+                        saida.write(mensagemEncriptada);
                         break;
                     }
 
-                    if(Company.temRotasDisponiveis()) {
+                    // Caso tenha mais rotas no vetor de rotas disponíveis da Company
+                    // O CarManipulator solicita a próxima rota para company e manda para o Car
+                    if (Company.temRotasDisponiveis()) {
                         Rota resposta = company.executarRota();
                         mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(resposta));
-				        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
-				        saida.write(mensagemEncriptada);
+                        saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
+                        saida.write(mensagemEncriptada);
                     }
-                } else if(StatusDoCarro.equals("finalizado")) {
+
+                // Estado "finalizado", indica que o carro finalizou uma rota
+                } else if (StatusDoCarro.equals("finalizado")) {
                     String routeID = comunicacao.getRouteIDSUMO();
                     System.out.println("SMC - Rota " + routeID + " finalizada.");
-                    company.terminarRota(routeID);
-                    distanciaPercorrida = 0;
-                    System.out.println("Aguardando mensagem...");
-                } else if(StatusDoCarro.equals("rodando")) {
-                    // a principio, nao faz nada
+                    company.terminarRota(routeID); // A partir do ID da rota chama-se o método que passa as rotas das lista em execução pra lista de terminadas
+                    distanciaPercorrida = 0; // Reseta-se a distância percorrida
+                
+                // Estado "rodando", indica que o carro está cumprindo uma rota
+                } else if (StatusDoCarro.equals("rodando")) {
+                    // Não faz nada
+
+                // Estado "abastecendo", indica que o carro está parado para abastecer
                 } else if (StatusDoCarro.equals("abastecendo")) {
-                    // a principio, nao faz nada
+                    // Não faz nada
+                
+                // Estado "encerrado", indica que a thread do carro foi encerrada
                 } else if (StatusDoCarro.equals("encerrado")) {
-                    break;
+                    break; // Sai do while imediatamente
                 }
             }
 
+            // Encerra o canal de comunicações
             System.out.println("Encerrando canal.");
             entrada.close();
             saida.close();
@@ -109,21 +131,21 @@ public class CarManipulator extends Thread {
         }
     }
 
-    private double calculaDistancia(double lat1, double lon1, double lat2, double lon2) {
-		double raioTerra = 6371000;
-	
-		// Diferenças das latitudes e longitudes
-		double diferancaLat = Math.toRadians(lat2 - lat1);
-		double diferancaLon = Math.toRadians(lon2 - lon1);
-	
-		// Fórmula de Haversine
-		double a = Math.sin(diferancaLat / 2) * Math.sin(diferancaLat / 2) +
-				   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-				   Math.sin(diferancaLon / 2) * Math.sin(diferancaLon / 2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		double distancia = raioTerra * c;
-	
-		return distancia;
-	}
-    
+    // Método que usa a fórmula de Haversine para calcular a distância entre dois pontos na Terra
+    private double atualizaDistancia(double distancia, double lat1, double lon1, double lat2, double lon2) {
+        double raioTerra = 6371000;
+
+        // Diferenças das latitudes e longitudes
+        double diferancaLat = Math.toRadians(lat2 - lat1);
+        double diferancaLon = Math.toRadians(lon2 - lon1);
+
+        // Fórmula de Haversine
+        double a = Math.sin(diferancaLat / 2) * Math.sin(diferancaLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(diferancaLon / 2) * Math.sin(diferancaLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double novaDistancia = raioTerra * c;
+
+        return distancia + novaDistancia;
+    }
 }

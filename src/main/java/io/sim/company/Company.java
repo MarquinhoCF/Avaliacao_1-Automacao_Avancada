@@ -5,8 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import org.python.modules.synchronize;
-
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Vehicle;
 import de.tudresden.sumo.objects.SumoStringList;
@@ -14,7 +12,6 @@ import io.sim.bank.Account;
 import io.sim.bank.AlphaBank;
 import io.sim.bank.BotPayment;
 import io.sim.bank.EndAccount;
-import io.sim.comunication.JSONConverter;
 import io.sim.driver.DrivingData;
 
 public class Company extends Thread {
@@ -160,8 +157,8 @@ public class Company extends Thread {
     public Rota executarRota() {
         synchronized (sincroniza) {
             if(rotasDisponiveis) {
-                Rota rota = rotasDisp.remove(0);
-                rotasEmExec.add(rota);
+                Rota rota = rotasDisp.remove(0);                 // TODO ERRO AQUI
+                rotasEmExec.add(rota);                                 // TODO VER CÓDIGO DO FELIPE
                 return rota;
             } else {
                 Rota rota = new Rota("-1", "00000");

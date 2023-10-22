@@ -10,46 +10,60 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+/**
+ *      A classe Rota representa informações de rota, com um identificador e detalhes sobre as bordas da rota. 
+ * Além disso, o método estático "criaRotasXML" é responsável por analisar um arquivo XML, extrair informações sobre as 
+ * rotas dos veículos e criar objetos Rota correspondentes, que são armazenados em uma lista e retornados.
+ */
 public class Rota {
-    private String id;
-    private String edges;
+    private String id;      // Identificador da rota
+    private String edges;   // Informações sobre as bordas da rota
 
     public Rota(String id, String edges) {
         this.id = id;
         this.edges = edges;
     }
 
+    // Retorna o identificador da rota
     public String getID() {
         return id;
     }
 
-    public String getEdges(){
+     // Retorna as informações sobre as bordas da rota
+    public String getEdges() {
         return edges;
     }
 
+    // Método estático que lê informações de rota de um arquivo XML e retorna uma lista de objetos Rota
     public static ArrayList<Rota> criaRotasXML(String xmlFilePath) {
         ArrayList<Rota> routes = new ArrayList<>();
         
         try {
+            // Configurando as classes necessárias para a análise do documento XML
             File xmlFile = new File(xmlFilePath);
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlFile);
+            
+            // Obtendo a lista de elementos com a tag "vehicle" do documento
             NodeList vehicleList = doc.getElementsByTagName("vehicle");
             
+            // Iterando sobre os elementos "vehicle"
             for (int i = 0; i < vehicleList.getLength(); i++) {
                 Element vehicleElement = (Element) vehicleList.item(i);
                 String idRouteAux = vehicleElement.getAttribute("id");
                 NodeList routeList = vehicleElement.getElementsByTagName("route");
                 
+                // Iterando sobre os elementos "route"
                 for (int j = 0; j < routeList.getLength(); j++) {
                     Element routeElement = (Element) routeList.item(j);
                     String edges = routeElement.getAttribute("edges");
-                
-                    // Crie um objeto Route para cada edge
-                    Rota route = new Rota(idRouteAux, edges);
-                    routes.add(route);
                     
+                    // Criando um objeto Rota com o identificador e informações sobre as bordas
+                    Rota route = new Rota(idRouteAux, edges);
+                    
+                    // Adicionando o objeto Rota à lista de rotas
+                    routes.add(route);
                 }
             }
         } catch (Exception e) {
@@ -58,4 +72,5 @@ public class Rota {
         
         return routes;
     }
+
 }

@@ -11,6 +11,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ *      A classe Driver é responsável por representar um motorista na simulação. Ela gerencia a interação entre o 
+ * motorista, o veículo (Car) que ele dirige e outros elementos, como o AlphaBank (Como cliente) e a estação de 
+ * combustível (FuelStation).
+ */
 public class Driver extends Thread {
     // Cliente de AlphaBank
     private Account account;
@@ -37,7 +42,7 @@ public class Driver extends Thread {
         this.rotasDisp = new ArrayList<Rota>();
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
-        this.saldoInicial = 200;
+        this.saldoInicial = 0;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
         this.postoCombustivel = _postoCombustivel;
@@ -47,51 +52,63 @@ public class Driver extends Thread {
     public void run() {
         try {
             System.out.println("Iniciando " + this.driverID);
-            
+
+            // Estabelece uma conexão com o servidor AlphaBank
             socket = new Socket(this.alphaBankServerHost, this.alphaBankServerPort);
+
+            // Cria uma conta bancária para o motorista
             this.account = Account.criaAccount(driverID, saldoInicial);
             AlphaBank.adicionarAccount(account);
             account.start();
-            System.out.println(driverID + " se conectou ao Servido do AlphaBank!!");
-            
+            System.out.println(driverID + " se conectou ao Servidor do AlphaBank!!");
+
+            // Inicia uma thread para o veículo (Car) associado ao motorista
             Thread threadCar = new Thread(this.car);
             threadCar.start();
 
+            // Loop principal da execução do motorista
             while(threadCar.isAlive()) {
-                Thread.sleep(this.car.getAcquisitionRate());
-                
+                Thread.sleep(taxaAquisicao);
+
+                // Verifica o status do veículo
                 if(car.getCarStatus() == "finalizado") {
-                    System.out.println(this.driverID + " rota " + this.rotasDisp.get(0).getID() + " finalizada");
+                    System.out.println(this.driverID + " rota " + rotaAtual.getID() + " finalizada");
                     rotasTerminadas.add(rotaAtual);
                     initRoute = false;
                 } else if((this.car.getCarStatus() == "rodando") && !initRoute) {
-                    System.out.println(this.driverID + " rota "+ this.car.getRota().getID() +" iniciada");
-                    rotaAtual = car.getRota();
-                    initRoute = true; 
+                    rotasDisp.add(this.car.getRota());
+                    rotaAtual = rotasDisp.remove(0);
+                    System.out.println(this.driverID + " rota "+ rotaAtual.getID() +" iniciada");
+                    initRoute = true;
                 }
 
-                if (this.car.getNivelDoTanque() < 9000){
-                    //this.car.setSpeed(0);
-                    double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000;
-                    double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo());
+                // Verifica o nível de combustível do veículo
+                if (this.car.getNivelDoTanque() < 3000){
+                    double litros = (this.car.getCapacidadeDoTanque() - this.car.getNivelDoTanque())/1000; // Verifica quantos litros faltando
+                    double[] info = postoCombustivel.decideQtdLitros(litros, this.account.getSaldo()); // Decide quantos litros irá comprar com base no saldo da conta do Driver
                     double precoAPagar = info[0];
                     double qtdML = info[1];
                     if (qtdML != 0) {
                         try {
                             System.out.println(driverID + " decidiu abastecer " + qtdML);
+                            // Abastece o veículo na estação de combustível
                             postoCombustivel.abastecerCarro(this.car, qtdML);
+
+                            // Inicia uma transação de pagamento no AlphaBank
                             BotPayment bt = new BotPayment(socket, account.getAccountID(), account.getSenha(), postoCombustivel.getFSAccountID(), precoAPagar);
                             bt.start();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     } else {
+                        // Se o carro não tiver dinheiro para abastecer ele fica parado pra sempre
                         System.out.println("/////////////////////////////////////// " + driverID + " NÃO TEM DINHEIRO PRA ABASTECER!!");
                     }
                 }
-
             }
-            car.setFinalizado(true);
+
+            // Encerra a execução do veículo e a conta bancária
+            car.setEncerrado(true);
             System.out.println("Encerrando " + driverID);
             EndAccount endAccount = new EndAccount(socket, account);
             endAccount.start();
@@ -101,6 +118,7 @@ public class Driver extends Thread {
             e.printStackTrace();
         }
     }
+
 
     public String getID() {
         return driverID;

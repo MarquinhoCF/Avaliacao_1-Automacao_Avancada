@@ -1,43 +1,42 @@
 package io.sim.driver;
 
-//import java.io.Serializable;
-
-/**Armazena dados do veiculo
- * Funcao organizacional, para ser usada no relatorio via Excel.
+/**
+ * 		A classe DrivingData é responsável por armazenar dados do veículo que são utilizados para fins organizacionais e 
+ * relatórios via Excel. Ela inclui informações relevantes para o tratamento de rotas, bem como métricas relacionadas à 
+ * simulação fornecidas pelo SUMO (Simulator of Urban Mobility), como velocidade, consumo de combustível e emissão de CO2 
+ * durante intervalos de tempo específicos.
  */
-
-//public class DrivingData implements Serializable{
 public class DrivingData {
 
-		/* Informações adicionais para lógica de tratamento de rotas */
+	/* Informações adicionais para lógica de tratamento de rotas */
 	
-	private String carID;
-	private String driverID;
-	private String carStatus;
-	private double latInicial;
-	private double lonInicial;
-	private double latAtual;
-	private double lonAtual;
+	private String carID;           // ID do veículo
+	private String driverID;        // ID do motorista associado ao veículo
+	private String carStatus;       // Status atual do veículo
+	private double latAnt;          // Latitude anterior do veículo
+	private double lonAnt;          // Longitude anterior do veículo
+	private double latAtual;        // Latitude atual do veículo
+	private double lonAtual;        // Longitude atual do veículo
 
-		/* SUMO's data */
+	/* SUMO's data */
 
-	private long timeStamp; 			// System.currentTimeMillis() IMP# precisa ser em nanosegundos
-	private String routeIDSUMO; 		// this.sumo.do_job_get(Vehicle.getRouteID(this.idAuto))
-	private double speed; 				// in m/s for the last time step
-	private double distance;
-	private double fuelConsumption; 	// in mg/s for the last time step
-	private int fuelType; 				// 1-diesel, 2-gasoline, 3-ethanol, 4-hybrid
-	private double co2Emission; 		// in mg/s for the last time step
+	private long timeStamp;         // Hora do sistema na hora da execução (System.currentTimeMillis())
+    private String routeIDSUMO;     // ID da rota obtido a partir do SUMO (this.sumo.do_job_get(Vehicle.getRouteID(this.idAuto)))
+    private double speed;           // Velocidade em m/s no último passo de tempo
+    private double distance;        // Distância percorrida
+    private double fuelConsumption; // Consumo de combustível em mg/s no último passo de tempo
+    private int fuelType;           // Tipo de combustível (1-diesel, 2-gasolina, 3-etanol, 4-híbrido)
+    private double co2Emission;     // Emissão de CO2 em mg/s no último passo de tempo
 
-	public DrivingData(String carID, String driverID, String carStatus, double latInicial, double lonInicial, double latAtual,
+	public DrivingData(String carID, String driverID, String carStatus, double latAnt, double lonAnt, double latAtual,
 		double lonAtual, long timeStamp, String routeIDSUMO, double speed, double distance, double fuelConsumption, int fuelType,
 		double co2Emission) {
 		
 		this.carID = carID;
 		this.driverID = driverID;
 		this.carStatus = carStatus;
-		this.latInicial = latInicial;
-		this.lonInicial = lonInicial;
+		this.latAnt = latAnt;
+		this.lonAnt = lonAnt;
 		this.latAtual = latAtual;
 		this.lonAtual = lonAtual;
 
@@ -49,6 +48,8 @@ public class DrivingData {
 		this.fuelType = fuelType;
 		this.co2Emission = co2Emission;
 	}
+
+	/* Getters e Setters das informações adicionais para lógica de tratamento de rotas */
 
 	public String getCarID() {
 		return this.carID;
@@ -62,12 +63,12 @@ public class DrivingData {
 		return this.carStatus;
 	}
 
-	public double getLatInicial() {
-		return this.latInicial;
+	public double getLatAnt() {
+		return this.latAnt;
 	}
 
-	public double getLonInicial() {
-		return this.lonInicial;
+	public double getLonAnt() {
+		return this.lonAnt;
 	}
 
 	public double getLatAtual() {
@@ -76,7 +77,6 @@ public class DrivingData {
 	public double getLonAtual() {
 		return this.lonAtual;
 	}
-
 
 	/* SUMO's data getters e setters */
 

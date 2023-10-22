@@ -7,20 +7,16 @@ import it.polito.appeal.traci.SumoTraciConnection;
 
 import io.sim.company.Rota;
 
-/**Cria o objeto veiculo no SUMO
- * Define cor e a rota.
- */
+// Esta classe cria um objeto de serviço de transporte no contexto do SUMO, define sua funcionalidade e configurações, 
+// e gerencia a rota e as informações relacionadas a um veículo em simulação.
 public class TransportService extends Thread {
 
 	private String idTransportService;
 	private boolean on_off;
 	private SumoTraciConnection sumo;
-	private Car car; // Veiculo correspondente 
-	private Rota rota; // representa a rota a ser cumprida
-	private SumoStringList edge; // NEWF
-	private boolean terminado; // chamado pelo Car
-	private boolean sumoInit;
-	// private boolean sumoReady;
+	private Car car; 					// Carro corresponde que será inicializado
+	private Rota rota; 					// representa a rota a ser cumprida
+	private SumoStringList edge;
 
 	public TransportService(boolean _on_off, String _idTransportService, Rota _route, Car _car, SumoTraciConnection _sumo) {
 		this.on_off = _on_off;
@@ -28,9 +24,6 @@ public class TransportService extends Thread {
 		this.rota = _route;
 		this.car = _car;
 		this.sumo = _sumo;
-		this.terminado = false;
-		this.sumoInit = false;
-		// this.sumoReady = false;
 	}
 
 	@Override
@@ -46,49 +39,10 @@ public class TransportService extends Thread {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
-		// // Loop principal
-		// while(!terminado) {
-		// 	try {
-		// 		if(this.on_off) {
-		// 			System.out.println("TS - on");
-		// 			while (this.on_off) {
-		// 				if(!this.sumoInit) {
-		// 					System.out.println("TS - entrou na criacao");
-		// 					this.initializeRoutes();
-		// 					System.out.println("TS - Rota: " + edge + " adcionada!");
-		// 					String edgeFinal = edge.get(edge.size()-1);
-		// 					System.out.println("TS - Edge final: "+edgeFinal);
-							
-		// 				}
-
-		// 				if (this.getSumo().isClosed()) {
-		// 					this.on_off = false;
-		// 					this.sumoReady = false;
-		// 					System.out.println("TS - SUMO is closed...");
-		// 				}
-
-		// 				try {
-		// 					this.sumo.do_timestep();
-		// 				} catch (Exception e) {
-		// 					e.printStackTrace();
-		// 				}
-		// 				Thread.sleep(this.car.getAcquisitionRate());
-		// 			}
-		// 			sumoInit = false;
-		// 			sumoReady = false;
-		// 		}
-
-		// 	} catch (Exception e) {
-		// 		e.printStackTrace();
-		// 	}
-		// }
-
 		System.out.println("Encerrando TransportService.");
 	}
 
 	private void initializeRoutes() {
-
 		// Adiciona todas as edges em uma lista de Strings
 		edge = new SumoStringList();
 		edge.clear();
@@ -126,8 +80,6 @@ public class TransportService extends Thread {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		this.sumoInit = true;
-		// this.sumoReady = true;
 	}
 
 	public boolean isOn_off() {
@@ -136,10 +88,6 @@ public class TransportService extends Thread {
 
 	public void setOn_off(boolean _on_off) {
 		this.on_off = _on_off;
-	}
-
-	public void setTerminado(boolean _terminado) {
-		this.terminado = _terminado;
 	}
 
 	public String getIdTransportService() {
@@ -161,9 +109,4 @@ public class TransportService extends Thread {
 	public void setRoute(Rota _rota) {
 		this.rota = _rota;
 	}
-
-	// public boolean isSumoReady() {
-	// 	return sumoReady;
-	// }
-
 }
