@@ -29,6 +29,7 @@ public class AlphaBankAttExcel extends Thread {
                     alphaBank.mandaRegistroAcc(registro);
                 }
             }
+            System.out.println("AlphaBankAttExcel encerrou!");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

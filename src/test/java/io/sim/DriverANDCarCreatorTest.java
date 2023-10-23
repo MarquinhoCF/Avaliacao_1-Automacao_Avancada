@@ -53,7 +53,7 @@ public class DriverANDCarCreatorTest {
 
             // Inicia um servidor AlphaBank na porta especificada
             ServerSocket alphaBankServer = new ServerSocket(portaAlphaBank);
-            AlphaBank alphaBank = new AlphaBank(alphaBankServer);
+            AlphaBank alphaBank = new AlphaBank(numDrivers + 2,alphaBankServer);
             alphaBank.start();
             Thread.sleep(2000);
 

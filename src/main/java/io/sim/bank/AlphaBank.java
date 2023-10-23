@@ -18,11 +18,13 @@ public class AlphaBank extends Thread {
     // Atributos da classe
     private static ArrayList<Account> accounts;
     private static ArrayList<TransferData> registrosPendentes;
+    private int numClientes;
 
     // Atributo de sincronização
     private Object sincroniza;
 
-    public AlphaBank(ServerSocket serverSocket) throws IOException {
+    public AlphaBank(int numClientes, ServerSocket serverSocket) throws IOException {
+        this.numClientes = numClientes;
         this.serverAlphaBank = serverSocket;
         accounts = new ArrayList<Account>();
         registrosPendentes = new ArrayList<TransferData>();
@@ -35,10 +37,12 @@ public class AlphaBank extends Thread {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
             AlphaBankAttExcel attExcel = new AlphaBankAttExcel(this);
             boolean primeiraVez = true;
+            int i = 0;
 
             // Aguarda por conexões enquanto houver contas ou durante a primeira execução
-            while (!accounts.isEmpty() || primeiraVez || !registrosPendentes.isEmpty()) {
+            while ( i < numClientes || primeiraVez) {
                 Socket clientSocket = serverAlphaBank.accept();
+                i++;
 
                 // Inicializa um manipulador de conta para lidar com a conexão
                 AccountManipulator accountManipulator = new AccountManipulator(clientSocket, this);
@@ -50,9 +54,16 @@ public class AlphaBank extends Thread {
                     primeiraVez = false;
                 }
             }
+
+            System.out.println("Todos as contas forma connectadas no Alpha Bank!");
+
+            while (!accounts.isEmpty() || !registrosPendentes.isEmpty()) {
+                Thread.sleep(1000);
+            }
+
             System.out.println("Encerrando AlphaBank");
             attExcel.setFuncionado(false);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }

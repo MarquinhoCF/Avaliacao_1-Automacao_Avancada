@@ -159,7 +159,10 @@ public class Car extends Vehicle implements Runnable {
 
 				boolean initRoute = true;
 				while (this.on_off) {
-
+					//System.out.println("Car: " + carStatus);
+					if (carStatus != "abastecendo") {
+						this.carStatus = "rodando";
+					}
 					// Calcula a latitude e longitude iniciais da Rota Atual
 					if (initRoute) {
 						double[] coordGeo = calculaCoordGeograficas();
@@ -175,6 +178,7 @@ public class Car extends Vehicle implements Runnable {
 						this.carStatus = "finalizado";
 
 						// Manda informações com o status "finalizado"
+						drivingDataAtual.setCarStatus(this.carStatus);
 						mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 						saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 						saida.write(mensagemEncriptada);
@@ -192,11 +196,6 @@ public class Car extends Vehicle implements Runnable {
 
 						// Atualiza sensores e informações de condução
 						atualizaSensores();
-
-						// Atualiza o status do carro quando não está abastecendo
-						if (carStatus != "abastecendo") {
-							this.carStatus = "rodando";
-						}
 						
 						// Se o status do carro não foi finalizado no "atualizaSensores" ele continua com o processo de obtenção de dados
 						if(this.carStatus.equals("finalizado")) {
@@ -207,7 +206,7 @@ public class Car extends Vehicle implements Runnable {
 							latAnt = latAtual;
 							lonAnt = lonAtual;
 
-							// Manda informações com o status "finalizado" ou "abastecendo"
+							// Manda informações com o status atualizado
 							mensagemEncriptada = AESencrypt.encripta(JSONConverter.criarJSONDrivingData(drivingDataAtual));
 							saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
 							saida.write(mensagemEncriptada);
@@ -221,11 +220,13 @@ public class Car extends Vehicle implements Runnable {
 				// Se não está ecerrado o carro está esperando outra rota
 				if(!encerrado) {
 					this.carStatus = "esperando";
+					drivingDataAtual.setCarStatus(this.carStatus);
 				}
 
 				// Se está ecerrado a thread do carro pode finalizar
 				if(encerrado) {
 					this.carStatus = "encerrado";
+					drivingDataAtual.setCarStatus(this.carStatus);
 				}
 			}
 
@@ -424,6 +425,7 @@ public class Car extends Vehicle implements Runnable {
 	// Para o carro e muda o status do carro para "abastecendo"
 	public void preparaAbastecimento() throws Exception{
 		carStatus = "abastecendo";
+		drivingDataAtual.setCarStatus(this.carStatus);
 		pararCarro();
 	}
 

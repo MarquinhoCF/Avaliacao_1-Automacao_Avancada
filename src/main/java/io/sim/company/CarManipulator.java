@@ -46,15 +46,17 @@ public class CarManipulator extends Thread {
             double distanciaPercorrida = 0;
             int numBytesMsg;
             byte[] mensagemEncriptada;
+            boolean sair = false;
 
             // Loop principal para interagir com o carro
-            while (!StatusDoCarro.equals("encerrado")) {
+            while (!StatusDoCarro.equals("encerrado") && !sair) {
                 numBytesMsg = JSONConverter.extraiTamanhoBytes(AESencrypt.decripta(entrada.readNBytes(AESencrypt.getTamNumBytes())));
                 DrivingData comunicacao = JSONConverter.extraiDrivingData(AESencrypt.decripta(entrada.readNBytes(numBytesMsg)));
 
                 company.addComunicacao(comunicacao); // Adiciona a informação na lista de espera para atualização da planilha Excel
 
                 StatusDoCarro = comunicacao.getCarStatus();  // Lê o status do carro
+                //System.out.println("CarManipulator: " + StatusDoCarro);
 
                 // Lê as informações sobre latitude e longitude
                 double latInicial = comunicacao.getLatAnt();
@@ -96,6 +98,10 @@ public class CarManipulator extends Thread {
                         mensagemEncriptada = AESencrypt.encripta(JSONConverter.criaJSONRota(resposta));
                         saida.write(AESencrypt.encripta(JSONConverter.criaJSONTamanhoBytes(mensagemEncriptada.length)));
                         saida.write(mensagemEncriptada);
+
+                        if (resposta.getID().equals("-1")) {
+                            sair = true;
+                        }
                     }
 
                 // Estado "finalizado", indica que o carro finalizou uma rota
@@ -118,11 +124,11 @@ public class CarManipulator extends Thread {
                     break; // Sai do while imediatamente
                 }
             }
-
+            
             // Encerra o canal de comunicações
             System.out.println("Encerrando canal.");
-            entrada.close();
-            saida.close();
+            //entrada.close();
+            //saida.close();
             carSocket.close();
         } catch (IOException ex) {
             ex.printStackTrace();

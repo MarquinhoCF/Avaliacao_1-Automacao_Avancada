@@ -158,8 +158,12 @@ public class Company extends Thread {
     public Rota executarRota() {
         synchronized (sincroniza) {
             if(rotasDisponiveis) {
-                Rota rota = rotasDisp.remove(0);                 // TODO ERRO AQUI
-                rotasEmExec.add(rota);                                 // TODO VER CÓDIGO DO FELIPE
+                if (rotasDisp.size() != 0) {
+                    Rota rota = rotasDisp.remove(0);
+                    rotasEmExec.add(rota);
+                    return rota;
+                }
+                Rota rota = new Rota("-1", "00000 00000 00000");
                 return rota;
             } else {
                 Rota rota = new Rota("-1", "00000 00000 00000");
@@ -170,12 +174,14 @@ public class Company extends Thread {
 
     public void terminarRota(String _routeID) {
         synchronized (sincroniza) {
-            System.out.println("Arquivando rota: " + _routeID);
-            int i = 0;
-            while (!rotasEmExec.get(i).getID().equals(_routeID)) {
-                i++;
+            if (!rotasEmExec.isEmpty()){
+                System.out.println("Arquivando rota: " + _routeID);
+                int i = 0;
+                while (!rotasEmExec.get(i).getID().equals(_routeID)) {
+                    i++;
+                }
+                rotasTerminadas.add(rotasEmExec.remove(i));
             }
-            rotasTerminadas.add(rotasEmExec.remove(i));
         }
     }
 

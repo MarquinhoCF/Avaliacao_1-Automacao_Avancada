@@ -22,7 +22,7 @@ public class AlphaBankTest {
     @Before
     public void setUp() throws IOException {
         ServerSocket serverSocket = new ServerSocket(12345); // Porta fícticia
-        alphaBank = new AlphaBank(serverSocket);
+        alphaBank = new AlphaBank(1,serverSocket);
     }
 
     // Teste para adição de conntas-correntes

@@ -58,7 +58,7 @@ public class EnvSimulator extends Thread {
 
             // Inicia um servidor AlphaBank na porta especificada
             ServerSocket alphaBankServer = new ServerSocket(portaAlphaBank);
-            AlphaBank alphaBank = new AlphaBank(alphaBankServer);
+            AlphaBank alphaBank = new AlphaBank(numDrivers + 2, alphaBankServer);
             alphaBank.start();
             Thread.sleep(2000);
 
@@ -85,6 +85,9 @@ public class EnvSimulator extends Thread {
             for(int i = 0; i < drivers.size(); i++) {
                 drivers.get(i).join();
             }
+            alphaBank.join();
+            company.join();
+            fuelStation.join();
 
             // Encerra o servidor Company
             execSimulador.setFuncionando(false);

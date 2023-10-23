@@ -26,6 +26,7 @@ public class CompanyAttExcel extends Thread {
                     ExcelReport.atualizaPlanilhaCar(company.pegaComunicacao());  // Atualiza o relatório no Excel
                 }
             }
+            System.out.println("CompanyAttExcel encerrou!");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

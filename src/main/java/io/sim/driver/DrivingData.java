@@ -63,6 +63,10 @@ public class DrivingData {
 		return this.carStatus;
 	}
 
+	public void setCarStatus(String _carStatus) {
+		carStatus = _carStatus;
+	}
+
 	public double getLatAnt() {
 		return this.latAnt;
 	}

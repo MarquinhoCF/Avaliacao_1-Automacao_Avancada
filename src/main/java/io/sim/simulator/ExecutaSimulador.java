@@ -28,6 +28,7 @@ public class ExecutaSimulador extends Thread {
                 break;
             }
         }
+        System.out.println("Executa Simulador encerrado!!!");
     }
 
     public void setFuncionando(boolean _funcionando) {

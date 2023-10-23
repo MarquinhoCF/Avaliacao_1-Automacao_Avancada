@@ -71,7 +71,7 @@ public class AccountManipulator extends Thread {
                         case "Sair":
                             // Finaliza a thread e remove a conta associada
                             sair = true;
-                            String accountID = tf.getAccountID();
+                            String accountID = tf.getPagador();
                             alphaBank.removerAccount(accountID);
                             System.out.println("Conta de " + accountID + " foi removida!!");
                             break;
@@ -82,6 +82,7 @@ public class AccountManipulator extends Thread {
                 } else {
                     System.out.println("AB - Login mal sucedido, verifique o ID e a senha: " + login[0]);
                 }
+                System.out.println("Account Manipulator encerrado...");
             } 
         } catch (IOException ex) {
             ex.printStackTrace();
