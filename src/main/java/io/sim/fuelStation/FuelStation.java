@@ -51,12 +51,12 @@ public class FuelStation extends Thread {
             while (Company.temRotasDisponiveis()) {
                 Thread.sleep(15000);
             }
+            System.out.println("Encerrando a Fuel Station...");
+            EndAccount endAccount = new EndAccount(socket, account);
+            endAccount.start(); // Encerra a conta e fecha a conexão com o AlphaBank
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Encerrando a Fuel Station...");
-        EndAccount endAccount = new EndAccount(socket, account);
-        endAccount.start(); // Encerra a conta e fecha a conexão com o AlphaBank
     }
 
     // Retorna o ID da conta da estação de combustível

@@ -7,16 +7,18 @@ import io.sim.report.ExcelReport;
  *  provenientes do AlphaBank.
  */
 public class AlphaBankAttExcel extends Thread {
-    AlphaBank alphaBank;
+    private AlphaBank alphaBank;
+    private boolean funcionando;
 
     public AlphaBankAttExcel(AlphaBank _alphaBank) {
         this.alphaBank = _alphaBank;
+        this.funcionando = true;
     }
 
     @Override
     public void run() {
         try {
-            while (true) {
+            while (funcionando) {
                 Thread.sleep(10); // Aguarda por um curto período (10 milissegundos) para evitar uso intensivo da CPU
                 if (alphaBank.temRegistro()) {
                     // Se houver registros pendentes no AlphaBank
@@ -30,6 +32,10 @@ public class AlphaBankAttExcel extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setFuncionado(boolean _funcionado) {
+        funcionando = _funcionado;
     }
 }
 

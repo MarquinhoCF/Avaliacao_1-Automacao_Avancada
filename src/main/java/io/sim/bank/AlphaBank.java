@@ -33,10 +33,11 @@ public class AlphaBank extends Thread {
     public void run() {
         try {
             System.out.println("AlphaBank iniciado. Aguardando conexões...");
+            AlphaBankAttExcel attExcel = new AlphaBankAttExcel(this);
             boolean primeiraVez = true;
 
             // Aguarda por conexões enquanto houver contas ou durante a primeira execução
-            while (!accounts.isEmpty() || primeiraVez) {
+            while (!accounts.isEmpty() || primeiraVez || !registrosPendentes.isEmpty()) {
                 Socket clientSocket = serverAlphaBank.accept();
 
                 // Inicializa um manipulador de conta para lidar com a conexão
@@ -45,17 +46,16 @@ public class AlphaBank extends Thread {
 
                 // Inicializa a atualização das planilhas Excel apenas na primeira execução
                 if (primeiraVez) {
-                    AlphaBankAttExcel attExcel = new AlphaBankAttExcel(this);
                     attExcel.start();
                     primeiraVez = false;
                 }
             }
             System.out.println("Encerrando AlphaBank");
+            attExcel.setFuncionado(false);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 
     // Método para adicionar uma conta bancária
     public static void adicionarAccount(Account conta) {
@@ -73,7 +73,8 @@ public class AlphaBank extends Thread {
         synchronized (AlphaBank.class) {
             for (int i = 0; i < accounts.size(); i++) {
                 if (accounts.get(i).getAccountID().equals(accountID)) {
-                    accounts.remove(i);
+                    Account conta = accounts.remove(i);
+                    conta.setFuncionando(false);
                 }
             }
         }
@@ -116,7 +117,7 @@ public class AlphaBank extends Thread {
     }
 
     // Método para obter uma conta com base em seu ID
-    private Account getAccountPeloID(String accountID) {
+    public Account getAccountPeloID(String accountID) {
         for (Account account : accounts) {
             if (account.getAccountID().equals(accountID)) {
                 return account;

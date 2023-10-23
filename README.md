@@ -1,4 +1,4 @@
-# Projeto de Automação Avançada - AV1
+<h1 align="center"> Avaliação 1 - Automação Avançada (GAT 108) </h1>
 
 Este é o repositório para o projeto da AV1 da disciplina de Automação Avançada. O projeto consiste em simular um ambiente de mobilidade urbana com várias entidades interagindo entre si.
 

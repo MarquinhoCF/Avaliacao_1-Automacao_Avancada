@@ -300,6 +300,10 @@ public class Car extends Vehicle implements Runnable {
 		return rota;
 	}
 
+	public String getDriverID() {
+		return driverID;
+	}
+
 	public boolean isOn_off() {
 		return this.on_off;
 	}

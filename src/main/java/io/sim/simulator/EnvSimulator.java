@@ -87,7 +87,9 @@ public class EnvSimulator extends Thread {
             }
 
             // Encerra o servidor Company
+            execSimulador.setFuncionando(false);
             companyServer.close();
+            alphaBankServer.close();
         } catch (IOException e1) {
             e1.printStackTrace();
         } catch (InterruptedException e) {

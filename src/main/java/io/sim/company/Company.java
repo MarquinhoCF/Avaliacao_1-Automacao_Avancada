@@ -70,8 +70,9 @@ public class Company extends Thread {
             AlphaBank.adicionarAccount(account);
             account.start();
             System.out.println("Company se conectou ao Servido do AlphaBank!!");
+            CompanyAttExcel attExcel = new CompanyAttExcel(this);
 
-            while (rotasDisponiveis) {
+            while (rotasDisponiveis || !carReports.isEmpty()) {
                 // Pequeno delay para evitar problemas
                 if(!canectandoCars) {
                     try {
@@ -100,7 +101,6 @@ public class Company extends Thread {
                         carManipulator.start();
 
                         if (i == 0) {
-                            CompanyAttExcel attExcel = new CompanyAttExcel(this);
                             attExcel.start();
                         }
 
@@ -111,13 +111,14 @@ public class Company extends Thread {
 
                 //System.out.println(account.getAccountID() + " tem R$" + account.getSaldo() + " de saldo");
             }
+            System.out.println("Encerrando a Company...");
+            EndAccount endAccount = new EndAccount(socket, account);
+            endAccount.start();
+            attExcel.setFuncionando(false);
         }
         catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Encerrando a Company...");
-        EndAccount endAccount = new EndAccount(socket, account);
-        endAccount.start();
     }
 
     public String getAccountID() {
@@ -161,7 +162,7 @@ public class Company extends Thread {
                 rotasEmExec.add(rota);                                 // TODO VER CÓDIGO DO FELIPE
                 return rota;
             } else {
-                Rota rota = new Rota("-1", "00000");
+                Rota rota = new Rota("-1", "00000 00000 00000");
                 return rota;
             }
         }

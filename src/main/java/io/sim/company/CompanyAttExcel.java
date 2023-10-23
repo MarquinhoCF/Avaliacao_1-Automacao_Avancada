@@ -7,17 +7,19 @@ import io.sim.report.ExcelReport;
  * recebidas pela classe Company.
  */
 public class CompanyAttExcel extends Thread {
-    Company company; // Uma instância da classe Company
+    private Company company; // Uma instância da classe Company
+    private boolean funcionando;
 
     public CompanyAttExcel(Company _company) {
         this.company = _company;
+        this.funcionando = true;
     }
 
     @Override
     public void run() {
         try {
             // Loop principal que verifica a disponibilidade de rotas
-            while (Company.temRotasDisponiveis()) {
+            while (funcionando) {
                 Thread.sleep(10); // Aguarda por um curto período (10 milissegundos) para evitar uso intensivo da CPU
                 if (company.temReport()) {
                     // Se a instância da classe Company possui relatórios para serem atualizados
@@ -27,5 +29,9 @@ public class CompanyAttExcel extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setFuncionando(boolean _funcionando) {
+        funcionando = _funcionando;
     }
 }

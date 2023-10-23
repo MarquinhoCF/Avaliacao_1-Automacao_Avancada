@@ -38,6 +38,7 @@ public class Account extends Thread {
                     tamHistoricoAnt = historico.size();
                 }
             }
+            System.out.println("Account: " + accountID + " FINALIZADA...");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -66,6 +67,10 @@ public class Account extends Thread {
     // Adiciona uma transação ao histórico
     public void addHistorico(TransferData data) {
         historico.add(data);
+    }
+
+    public ArrayList<TransferData> getHistorico() {
+        return historico;
     }
 
     // Define se a conta está funcionando

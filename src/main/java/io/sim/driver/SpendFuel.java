@@ -28,8 +28,8 @@ public class SpendFuel extends Thread {
 
                 while (car.isOn_off()) { // Enquanto o veículo está ligado e não está abastecendo
                     if (!car.getCarStatus().equals("abastecendo")) {
-                        // Gere um número aleatório entre 2.2 e 3.9 para simular o consumo de combustível
-                        double consumo = 2.2 + (3.9 - 2.2) * random.nextDouble();
+                        // Gere um número aleatório entre 5.2 e 9.6 para simular o consumo de combustível
+                        double consumo = 5.2 + (9.6 - 5.2) * random.nextDouble();
                         car.gastaCombustivel(consumo); // Atualiza o nível de combustível no veículo
                     }
                     Thread.sleep(1000); // Aguarde 1 segundo antes de verificar novamente
