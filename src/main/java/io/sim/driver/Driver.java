@@ -42,7 +42,7 @@ public class Driver extends Thread {
         this.rotasDisp = new ArrayList<Rota>();
         rotaAtual = null;
         this.rotasTerminadas = new ArrayList<Rota>();
-        this.saldoInicial = 0;
+        this.saldoInicial = 30;
         this.alphaBankServerPort = _alphaBankServerPort;
         this.alphaBankServerHost = _alphaBankServerHost;
         this.postoCombustivel = _postoCombustivel;
